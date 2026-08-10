@@ -1,0 +1,26 @@
+services:
+  agora-api:
+    build: .
+    container_name: agora-api
+    environment:
+      DB_HOST: ${AGORA_DB_HOST:-agora-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-agora}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no api/.env}
+      QUERY_TIMEOUT_MS: ${QUERY_TIMEOUT_MS:-3000}
+      MAX_ROWS: ${MAX_ROWS:-1000}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped

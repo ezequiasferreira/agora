@@ -110,6 +110,34 @@ Ao subir:
 
 ---
 
+## Rodar a API em container
+
+Para rodar a API em um container Docker (requer Docker e Compose na máquina):
+
+```bash
+# A partir da raiz do repositório, com o banco já acessível na rede do compose
+docker compose -f api/docker-compose.api.yaml up -d --build
+```
+
+- A API sobe em http://localhost:8000 (Swagger em `/docs`);
+- A configuração vem das mesmas variáveis do `api/.env`;
+- Por padrão o container enxerga o banco pelo hostname `agora-db` na rede `api_default` — mantenha o compose do banco de pé antes;
+- Se o banco estiver em outro endereço, informe-o para o container:
+
+```bash
+AGORA_DB_HOST=192.168.0.10 docker compose -f api/docker-compose.api.yaml up -d
+```
+
+Comandos úteis:
+
+```bash
+docker compose -f api/docker-compose.api.yaml up -d --build agora-api   # rebuild após mudanças no código
+docker compose -f api/docker-compose.api.yaml logs -f agora-api          # acompanhar logs
+docker compose -f api/docker-compose.api.yaml down                       # parar a API
+```
+
+---
+
 ## Como testar a API
 
 ### 1. Interface Swagger

@@ -1,8 +1,15 @@
 import json
 import os
 from google import genai
+from dotenv import load_dotenv # <--- Importa a função que lê o arquivo
 
-# 1. CLASSE BASE (O Contrato)
+# 1. Carrega as variáveis de ambiente do arquivo .env
+load_dotenv()
+
+# 2. Resgata a chave da memória
+CHAVE_GEMINI = os.getenv("GEMINI_API_KEY")
+
+# 3. CLASSE BASE
 class LLMProvider:
     def gerar_sql(self, prompt: str) -> str:
         raise NotImplementedError("As subclasses devem implementar este método")
@@ -22,7 +29,7 @@ class GeminiLLM(LLMProvider):
         return interaction.output_text
 
 
-# --- O COMPONENTE PRINCIPAL ---
+# --- 3. COMPONENTE PRINCIPAL ---
 class TradutorNL2SQL:
     def __init__(self, llm_provider: LLMProvider, caminho_schema: str = "schema_test.json"):
         self.llm = llm_provider
@@ -61,17 +68,36 @@ SQL:"""
         sql_limpo = resposta_bruta.replace("```sql", "").replace("```", "").strip()
         return sql_limpo
 
-# --- TESTANDO O CÓDIGO ---
+# --- 4. TESTANDO O CÓDIGO ---
 if __name__ == "__main__":
+
+    # Se a chave não for encontrada, o programa avisa o erro de forma clara
+    if not CHAVE_GEMINI:
+        raise ValueError("Chave da API não encontrada. Verifique se o arquivo .env está configurado corretamente e contém GEMINI_API_KEY.")
     
-    # O ideal será mover isso para um arquivo .env depois!
-    llm_escolhida = GeminiLLM(api_key="AQ.Ab8RN6JSxguFJwAu2oa2x5vs8hEIFyPHtsjr1jbsCmZbsukCCA")
+    llm_escolhida = GeminiLLM(api_key=CHAVE_GEMINI)
     
     tradutor = TradutorNL2SQL(llm_provider=llm_escolhida)
     
-    #pergunta = "Qual o status dos processos que tiveram abertura no ano de 2023?"
-    pergunta = "Qual a cor dos olhos verdes dos responsáveis pelos processos?"
-    resultado = tradutor.processar_pergunta(pergunta)
+    print("Módulo NL -> SQL iniciado. (Digite 'sair' para encerrar)")
+    print("-" * 50)
     
-    print(f"Pergunta: {pergunta}")
-    print(f"SQL Gerado: {resultado}")
+    # Loop infinito para você fazer quantas perguntas quiser
+    while True:
+        # O programa pausa aqui e espera você digitar no terminal
+        pergunta = input("\nDigite sua pergunta: ")
+        
+        # Condição para quebrar o loop e fechar o programa
+        if pergunta.lower() in ['sair', 'exit', 'quit', '0']:
+            print("Encerrando o módulo...")
+            break
+            
+        # Ignora se você apertar Enter sem digitar nada
+        if not pergunta.strip():
+            continue
+            
+        print("Processando com a LLM...")
+        resultado = tradutor.processar_pergunta(pergunta)
+        
+        print(f"SQL Gerado: \n{resultado}")
+        print("-" * 50)

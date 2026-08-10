@@ -1,0 +1,25 @@
+services:
+  agora-db:
+    image: postgres:16-alpine
+    container_name: agora-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agora}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - agora_pgdata:/var/lib/postgresql/data
+      - ../database/ddl/estrutura_agora.sql:/docker-entrypoint-initdb.d/01-estrutura.sql:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-agora}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  agora_pgdata:

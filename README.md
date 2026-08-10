@@ -1,2 +1,3 @@
-# agora
-Ágora – MVP de integração inteligente de dados funcionais e remuneratórios do TJRR
+# Documentação do Projeto Ágora
+
+Documentação técnica, arquitetura, contratos e acompanhamento do MVP.

@@ -1,0 +1,54 @@
+{
+  "tabelas": [
+    {
+      "nome": "processos",
+      "descricao": "Armazena as informações principais dos processos judiciais",
+      "colunas": [
+        {"nome": "id", "tipo": "INT", "descricao": "Identificador único do processo no sistema de banco de dados"},
+        {"nome": "numero_cnj", "tipo": "VARCHAR", "descricao": "Número único padrão CNJ do processo (ex: 0001234-56.2023.8.00.0000)"},
+        {"nome": "data_distribuicao", "tipo": "DATE", "descricao": "Data em que o processo foi iniciado no tribunal"},
+        {"nome": "magistrado_id", "tipo": "INT", "descricao": "Chave estrangeira para a tabela magistrados indicando o juiz titular"},
+        {"nome": "valor_causa", "tipo": "DECIMAL", "descricao": "Valor financeiro atribuído à causa"},
+        {"nome": "status_processo", "tipo": "VARCHAR", "descricao": "Situação atual (ex: Ativo, Suspenso, Baixado/Arquivado)"}
+      ]
+    },
+    {
+      "nome": "magistrados",
+      "descricao": "Armazena os dados dos juízes e desembargadores do tribunal",
+      "colunas": [
+        {"nome": "id", "tipo": "INT", "descricao": "Identificador único do magistrado"},
+        {"nome": "nome_completo", "tipo": "VARCHAR", "descricao": "Nome completo do magistrado"},
+        {"nome": "lotacao", "tipo": "VARCHAR", "descricao": "Vara, juizado ou câmara onde o magistrado atua (ex: 1ª Vara Cível)"}
+      ]
+    },
+    {
+      "nome": "partes",
+      "descricao": "Armazena os dados das pessoas físicas ou jurídicas envolvidas",
+      "colunas": [
+        {"nome": "id", "tipo": "INT", "descricao": "Identificador único da parte"},
+        {"nome": "nome", "tipo": "VARCHAR", "descricao": "Nome completo ou Razão Social"},
+        {"nome": "documento", "tipo": "VARCHAR", "descricao": "CPF para pessoas físicas ou CNPJ para empresas"}
+      ]
+    },
+    {
+      "nome": "processo_partes",
+      "descricao": "Tabela associativa de ligação (N:N) entre processos e partes",
+      "colunas": [
+        {"nome": "processo_id", "tipo": "INT", "descricao": "Chave estrangeira para o processo"},
+        {"nome": "parte_id", "tipo": "INT", "descricao": "Chave estrangeira para a parte envolvida"},
+        {"nome": "tipo_participacao", "tipo": "VARCHAR", "descricao": "O papel da parte no processo (ex: Polo Ativo/Autor, Polo Passivo/Réu, Terceiro Interessado)"}
+      ]
+    },
+    {
+      "nome": "movimentacoes",
+      "descricao": "Histórico de andamentos e atos processuais de um processo",
+      "colunas": [
+        {"nome": "id", "tipo": "INT", "descricao": "Identificador único da movimentação"},
+        {"nome": "processo_id", "tipo": "INT", "descricao": "Chave estrangeira para o processo que sofreu a movimentação"},
+        {"nome": "data_hora", "tipo": "TIMESTAMP", "descricao": "Data e hora exata em que o andamento ocorreu"},
+        {"nome": "tipo_movimento", "tipo": "VARCHAR", "descricao": "Categoria padronizada do movimento (ex: Despacho, Sentença, Juntada de Petição)"},
+        {"nome": "descricao_completa", "tipo": "TEXT", "descricao": "Texto detalhado do andamento processual"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "database": "agora",
+  "schema": "agora",
+  "tables": [
+    {
+      "name": "remuneracoes",
+      "columns": [
+        {"name": "id", "type": "bigint", "nullable": false},
+        {"name": "ano", "type": "integer", "nullable": false},
+        {"name": "mes", "type": "integer", "nullable": false},
+        {"name": "nome", "type": "text", "nullable": false},
+        {"name": "cargo", "type": "text", "nullable": true},
+        {"name": "lotacao", "type": "text", "nullable": true},
+        {"name": "remuneracao_paradigma", "type": "numeric", "nullable": true},
+        {"name": "vantagens_pessoais", "type": "numeric", "nullable": true},
+        {"name": "subsidio_funcao_cargo_comissao", "type": "numeric", "nullable": true},
+        {"name": "indenizacoes", "type": "numeric", "nullable": true},
+        {"name": "vantagens_eventuais", "type": "numeric", "nullable": true},
+        {"name": "gratificacoes", "type": "numeric", "nullable": true},
+        {"name": "total_creditos", "type": "numeric", "nullable": true},
+        {"name": "previdencia_publica", "type": "numeric", "nullable": true},
+        {"name": "imposto_renda", "type": "numeric", "nullable": true},
+        {"name": "descontos_diversos", "type": "numeric", "nullable": true},
+        {"name": "retencao_teto", "type": "numeric", "nullable": true},
+        {"name": "total_debitos", "type": "numeric", "nullable": true},
+        {"name": "rendimento_liquido", "type": "numeric", "nullable": true},
+        {"name": "remuneracao_orgao_origem", "type": "numeric", "nullable": true},
+        {"name": "diarias", "type": "numeric", "nullable": true},
+        {"name": "arquivo_origem", "type": "text", "nullable": true},
+        {"name": "data_carga", "type": "timestamp", "nullable": true}
+      ],
+      "primary_key": ["id"],
+      "foreign_keys": []
+    },
+    {
+      "name": "servidores_tlp",
+      "columns": [
+        {"name": "id", "type": "bigint", "nullable": false},
+        {"name": "data_referencia", "type": "date", "nullable": false},
+        {"name": "grupo_tlp", "type": "varchar", "nullable": false},
+        {"name": "categoria_tlp", "type": "text", "nullable": false},
+        {"name": "numero", "type": "integer", "nullable": true},
+        {"name": "matricula", "type": "text", "nullable": false},
+        {"name": "nome", "type": "text", "nullable": false},
+        {"name": "nome_normalizado", "type": "text", "nullable": true},
+        {"name": "lotacao", "type": "text", "nullable": true},
+        {"name": "origem_requisitado", "type": "text", "nullable": true},
+        {"name": "cargo_efetivo", "type": "text", "nullable": true},
+        {"name": "cargo_comissao", "type": "text", "nullable": true},
+        {"name": "funcao_confianca", "type": "text", "nullable": true},
+        {"name": "efetivo", "type": "boolean", "nullable": false},
+        {"name": "efetivo_com_cargo_comissao", "type": "boolean", "nullable": false},
+        {"name": "efetivo_com_funcao_confianca", "type": "boolean", "nullable": false},
+        {"name": "requisitado", "type": "boolean", "nullable": false},
+        {"name": "requisitado_com_cargo_comissao", "type": "boolean", "nullable": false},
+        {"name": "requisitado_com_funcao_confianca", "type": "boolean", "nullable": false},
+        {"name": "exclusivamente_comissionado", "type": "boolean", "nullable": false},
+        {"name": "grau_jurisdicao", "type": "text", "nullable": true},
+        {"name": "arquivo_origem", "type": "text", "nullable": false},
+        {"name": "data_carga", "type": "timestamp", "nullable": false}
+      ],
+      "primary_key": ["id"],
+      "foreign_keys": []
+    },
+    {
+      "name": "unidades_tlp",
+      "columns": [
+        {"name": "id", "type": "bigint", "nullable": false},
+        {"name": "data_referencia", "type": "date", "nullable": false},
+        {"name": "grupo_tlp", "type": "varchar", "nullable": false},
+        {"name": "categoria_tlp", "type": "text", "nullable": false},
+        {"name": "grau", "type": "text", "nullable": true},
+        {"name": "tipo", "type": "text", "nullable": true},
+        {"name": "unidade", "type": "text", "nullable": false},
+        {"name": "uf", "type": "text", "nullable": true},
+        {"name": "municipio_ibge", "type": "text", "nullable": true},
+        {"name": "lotacao_paradigma", "type": "integer", "nullable": true},
+        {"name": "lotacao_real_efetivos", "type": "integer", "nullable": false},
+        {"name": "lotacao_real_requisitados", "type": "integer", "nullable": false},
+        {"name": "lotacao_real_sem_vinculo", "type": "integer", "nullable": false},
+        {"name": "lotacao_real_outros", "type": "integer", "nullable": false},
+        {"name": "arquivo_origem", "type": "text", "nullable": false},
+        {"name": "data_carga", "type": "timestamp", "nullable": false}
+      ],
+      "primary_key": ["id"],
+      "foreign_keys": []
+    },
+    {
+      "name": "unidades_tlp_cargos_funcoes",
+      "columns": [
+        {"name": "id", "type": "bigint", "nullable": false},
+        {"name": "unidade_tlp_id", "type": "bigint", "nullable": false},
+        {"name": "categoria", "type": "text", "nullable": false},
+        {"name": "codigo", "type": "text", "nullable": true},
+        {"name": "denominacao", "type": "text", "nullable": false},
+        {"name": "quantidade", "type": "integer", "nullable": false}
+      ],
+      "primary_key": ["id"],
+      "foreign_keys": [
+        {
+          "column": "unidade_tlp_id",
+          "references_table": "unidades_tlp",
+          "references_column": "id"
+        }
+      ]
+    },
+    {
+      "name": "rubricas_folha",
+      "columns": [
+        {"name": "id", "type": "bigint", "nullable": false},
+        {"name": "codigo", "type": "integer", "nullable": false},
+        {"name": "denominacao", "type": "text", "nullable": false},
+        {"name": "fundamento_legal", "type": "text", "nullable": true},
+        {"name": "arquivo_origem", "type": "text", "nullable": false},
+        {"name": "data_carga", "type": "timestamp", "nullable": false}
+      ],
+      "primary_key": ["id"],
+      "foreign_keys": []
+    }
+  ]
+}

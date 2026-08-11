@@ -75,6 +75,8 @@ E retornar exatamente um dos estados:
 
 10. Não utilize nomes de tabelas ou colunas fixados previamente fora do catálogo.
 
+11. Assuma valores lógicos padrão para filtros implícitos (ex: "primeiro grau" = 1) em vez de pausar a operação para pedir os valores exatos.
+
 ---
 
 ## Critérios para QUERY

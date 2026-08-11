@@ -1,103 +1,152 @@
 import json
 import os
+from api_client import executar_sql_na_api
 from google import genai
 from dotenv import load_dotenv # <--- Importa a função que lê o arquivo
 
-# 1. Carrega as variáveis de ambiente do arquivo .env
-load_dotenv()
-
-# 2. Resgata a chave da memória
-CHAVE_GEMINI = os.getenv("GEMINI_API_KEY")
-
-# 3. CLASSE BASE
+# CLASSE BASE
 class LLMProvider:
     def gerar_sql(self, prompt: str) -> str:
         raise NotImplementedError("As subclasses devem implementar este método")
 
-# 2. IMPLEMENTAÇÃO COM GEMINI
+# IMPLEMENTAÇÃO COM GEMINI (TEMPORÁRIO)
 class GeminiLLM(LLMProvider):
     def __init__(self, api_key: str):
-        # Inicializa o cliente passando a chave da API
         self.client = genai.Client(api_key=api_key)
 
     def gerar_sql(self, prompt: str) -> str:
-        # Usando a estrutura da documentação que você enviou
-        interaction = self.client.interactions.create(
-            model="gemini-3.5-flash", 
-            input=prompt
-        )
-        return interaction.output_text
+        try:
+            interaction = self.client.interactions.create(
+                model="gemini-3.5-flash", 
+                input=prompt
+            )
+            return interaction.output_text
+            
+        except Exception as e:
+            # Captura o erro e transforma em string para análise
+            erro_str = str(e)
+            
+            # Se for um erro de limite de cota (Rate Limit / 429)
+            if "429" in erro_str or "Quota exceeded" in erro_str:
+                print("\n[Aviso] Limite da API gratuita atingido. Pausando para não quebrar o sistema.")
+                # Retornamos uma string JSON "fake" que será lida perfeitamente pelo seu TradutorNL2SQL
+                return """{
+                  "status": "NOT_ANSWERABLE",
+                  "message": "O sistema está processando muitos pedidos no momento (Limite de Cota). Por favor, aguarde alguns segundos e tente novamente."
+                }"""
+            
+            # Para qualquer outro erro de rede ou de API genérico
+            return f"""{{
+              "status": "NOT_ANSWERABLE",
+              "message": "Erro de comunicação com o motor de Inteligência Artificial."
+            }}"""
 
 
 # --- 3. COMPONENTE PRINCIPAL ---
 class TradutorNL2SQL:
-    def __init__(self, llm_provider: LLMProvider, caminho_schema: str = "schema_test.json"):
+    def __init__(self, llm_provider, nome_catalogo="data_catalog.example.json"):
         self.llm = llm_provider
-        self.schema_str = self._carregar_schema(caminho_schema)
+        # Agora lemos o catálogo provisório do Gabriel
+        self.catalogo_str = self._carregar_arquivo_local(nome_catalogo)
 
-    def _carregar_schema(self, nome_arquivo):
-        # 1. Pega o diretório exato onde este script Python (.py) está salvo
+    def _carregar_arquivo_local(self, nome_arquivo):
         diretorio_atual = os.path.dirname(os.path.abspath(__file__))
-        
-        # 2. Junta o caminho do diretório com o nome do arquivo JSON
         caminho_completo = os.path.join(diretorio_atual, nome_arquivo)
-        
         try:
             with open(caminho_completo, 'r', encoding='utf-8') as f:
-                schema_dict = json.load(f)
-                return json.dumps(schema_dict, indent=2, ensure_ascii=False)
+                if nome_arquivo.endswith('.json'):
+                    return json.dumps(json.load(f), indent=2, ensure_ascii=False)
+                return f.read()
         except FileNotFoundError:
-            raise FileNotFoundError(f"Arquivo não encontrado no caminho exato: {caminho_completo}")
+            raise FileNotFoundError(f"Arquivo não encontrado: {caminho_completo}")
 
-    def processar_pergunta(self, pergunta: str) -> str:
-        prompt_template = f"""Você é um especialista em banco de dados e atua como um tradutor de linguagem natural para SQL.
+    def processar_pergunta(self, pergunta: str):
+        # Incorporando as regras do system_prompt.md
+        prompt_template = f"""Você é um especialista em PostgreSQL.
 
-SCHEMA DO BANCO DE DADOS:
-{self.schema_str}
+CATÁLOGO DE DADOS DISPONÍVEIS:
+{self.catalogo_str}
 
 REGRAS OBRIGATÓRIAS:
-1. Retorne APENAS o código SQL válido. Não adicione formatação markdown (como ```sql), explicações, saudações ou comentários.
-2. Se a pergunta não puder ser respondida, retorne: "UNANSWERABLE_QUESTION".
+- Use SOMENTE tabelas e colunas existentes no catálogo.
+- Não invente tabelas, colunas ou relacionamentos.
+- Gere apenas comandos SELECT (SQL PostgreSQL válido).
+- Gere a consulta de forma SEGURA E PARAMETRIZADA (use $1, $2 para os valores).
+- Retorne APENAS um objeto JSON válido, sem formatação markdown, com a seguinte estrutura:
+
+{{
+  "status": "QUERY | NOT_ANSWERABLE | NEEDS_CLARIFICATION",
+  "query": "Comando SQL parametrizado (se status for QUERY)",
+  "message": "Motivo/Explicação (se status for NOT_ANSWERABLE ou NEEDS_CLARIFICATION)"
+}}
 
 PERGUNTA DO USUÁRIO:
 {pergunta}
 
-SQL:"""
+JSON:"""
 
         resposta_bruta = self.llm.gerar_sql(prompt_template)
-        sql_limpo = resposta_bruta.replace("```sql", "").replace("```", "").strip()
-        return sql_limpo
+        json_limpo = resposta_bruta.replace("```json", "").replace("```", "").strip()
+        
+        try:
+            return json.loads(json_limpo)
+        except json.JSONDecodeError:
+            return {
+                "status": "NOT_ANSWERABLE",
+                "message": f"Erro interno ao processar a resposta da LLM."
+            }
 
-# --- 4. TESTANDO O CÓDIGO ---
+# --- TESTANDO O CÓDIGO ---
 if __name__ == "__main__":
-
-    # Se a chave não for encontrada, o programa avisa o erro de forma clara
+    load_dotenv()
+    CHAVE_GEMINI = os.getenv("GEMINI_API_KEY")
+    
     if not CHAVE_GEMINI:
-        raise ValueError("Chave da API não encontrada. Verifique se o arquivo .env está configurado corretamente e contém GEMINI_API_KEY.")
+        raise ValueError("Chave da API não encontrada no .env.")
     
-    llm_escolhida = GeminiLLM(api_key=CHAVE_GEMINI)
+    tradutor = TradutorNL2SQL(llm_provider=GeminiLLM(api_key=CHAVE_GEMINI))
     
-    tradutor = TradutorNL2SQL(llm_provider=llm_escolhida)
-    
-    print("Módulo NL -> SQL iniciado. (Digite 'sair' para encerrar)")
+    print("Módulo NL -> SQL (Projeto Ágora) iniciado. Digite 'sair' para encerrar.")
     print("-" * 50)
     
-    # Loop infinito para você fazer quantas perguntas quiser
     while True:
-        # O programa pausa aqui e espera você digitar no terminal
         pergunta = input("\nDigite sua pergunta: ")
         
-        # Condição para quebrar o loop e fechar o programa
         if pergunta.lower() in ['sair', 'exit', 'quit', '0']:
-            print("Encerrando o módulo...")
             break
-            
-        # Ignora se você apertar Enter sem digitar nada
         if not pergunta.strip():
             continue
             
-        print("Processando com a LLM...")
-        resultado = tradutor.processar_pergunta(pergunta)
+        # Log exigido pela documentação
+        log_execucao = {
+            "question": pergunta,
+            "status_llm": None,
+            "generated_sql": None,
+            "api_response": None,
+            "error": None
+        }
         
-        print(f"SQL Gerado: \n{resultado}")
+        print("Processando com a LLM...")
+        resultado_llm = tradutor.processar_pergunta(pergunta)
+        
+        status = resultado_llm.get("status")
+        log_execucao["status_llm"] = status
+
+        if status == "QUERY":
+            # Extraímos apenas a query e os params para enviar ao Gelson
+            payload = {
+                "query": resultado_llm.get("query"),
+            }
+            log_execucao["generated_sql"] = payload
+            
+            print(f"[{status}] Enviando POST /query para o banco...")
+            resposta_api = executar_sql_na_api(payload)
+            log_execucao["api_response"] = resposta_api
+            
+        elif status in ["NOT_ANSWERABLE", "NEEDS_CLARIFICATION"]:
+            log_execucao["error"] = resultado_llm.get("message")
+            print(f"[{status}] Retorno para o usuário: {log_execucao['error']}")
+
+        print("\n--- LOG DE EXECUÇÃO ---")
+        print(json.dumps(log_execucao, indent=2, ensure_ascii=False))
         print("-" * 50)

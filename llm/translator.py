@@ -20,6 +20,11 @@ class TradutorNL2SQL:
             os.path.abspath(__file__)
         )
 
+        # Diretório raiz do projeto
+        self.diretorio_raiz = os.path.dirname(
+            self.diretorio_base
+        )
+
         # Carrega catálogo e prompt uma única vez
         self.catalogo_str = self._carregar_catalogo(
             nome_catalogo
@@ -28,7 +33,8 @@ class TradutorNL2SQL:
 
     def _carregar_catalogo(self, nome_arquivo):
         caminho_completo = os.path.join(
-            self.diretorio_base,
+            self.diretorio_raiz,
+            "catalog",
             nome_arquivo,
         )
 

@@ -6,8 +6,28 @@
             "name": "remuneracoes",
             "columns": [
                 {
-                    "name": "vantagens_pessoais",
-                    "type": "numeric",
+                    "name": "id",
+                    "type": "bigint",
+                    "nullable": false
+                },
+                {
+                    "name": "ano",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "mes",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "nome",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "cargo",
+                    "type": "text",
                     "nullable": true
                 },
                 {
@@ -16,42 +36,12 @@
                     "nullable": true
                 },
                 {
-                    "name": "nome",
-                    "type": "text",
-                    "nullable": false
-                },
-                {
-                    "name": "data_carga",
-                    "type": "timestamp without time zone",
-                    "nullable": true
-                },
-                {
-                    "name": "descontos_diversos",
-                    "type": "numeric",
-                    "nullable": true
-                },
-                {
-                    "name": "id",
-                    "type": "bigint",
-                    "nullable": false
-                },
-                {
-                    "name": "arquivo_origem",
-                    "type": "text",
-                    "nullable": true
-                },
-                {
-                    "name": "previdencia_publica",
-                    "type": "numeric",
-                    "nullable": true
-                },
-                {
-                    "name": "mes",
-                    "type": "integer",
-                    "nullable": false
-                },
-                {
                     "name": "remuneracao_paradigma",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "vantagens_pessoais",
                     "type": "numeric",
                     "nullable": true
                 },
@@ -61,12 +51,7 @@
                     "nullable": true
                 },
                 {
-                    "name": "remuneracao_orgao_origem",
-                    "type": "numeric",
-                    "nullable": true
-                },
-                {
-                    "name": "retencao_teto",
+                    "name": "indenizacoes",
                     "type": "numeric",
                     "nullable": true
                 },
@@ -76,22 +61,17 @@
                     "nullable": true
                 },
                 {
-                    "name": "ano",
-                    "type": "integer",
-                    "nullable": false
-                },
-                {
                     "name": "gratificacoes",
                     "type": "numeric",
                     "nullable": true
                 },
                 {
-                    "name": "indenizacoes",
+                    "name": "total_creditos",
                     "type": "numeric",
                     "nullable": true
                 },
                 {
-                    "name": "total_debitos",
+                    "name": "previdencia_publica",
                     "type": "numeric",
                     "nullable": true
                 },
@@ -101,23 +81,43 @@
                     "nullable": true
                 },
                 {
-                    "name": "diarias",
+                    "name": "descontos_diversos",
                     "type": "numeric",
                     "nullable": true
                 },
                 {
-                    "name": "cargo",
-                    "type": "text",
+                    "name": "retencao_teto",
+                    "type": "numeric",
                     "nullable": true
                 },
                 {
-                    "name": "total_creditos",
+                    "name": "total_debitos",
                     "type": "numeric",
                     "nullable": true
                 },
                 {
                     "name": "rendimento_liquido",
                     "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "remuneracao_orgao_origem",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "diarias",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "arquivo_origem",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "data_carga",
+                    "type": "timestamp without time zone",
                     "nullable": true
                 }
             ],
@@ -130,23 +130,8 @@
             "name": "rubricas_folha",
             "columns": [
                 {
-                    "name": "data_carga",
-                    "type": "timestamp without time zone",
-                    "nullable": false
-                },
-                {
                     "name": "id",
                     "type": "bigint",
-                    "nullable": false
-                },
-                {
-                    "name": "fundamento_legal",
-                    "type": "text",
-                    "nullable": true
-                },
-                {
-                    "name": "denominacao",
-                    "type": "text",
                     "nullable": false
                 },
                 {
@@ -155,8 +140,23 @@
                     "nullable": false
                 },
                 {
+                    "name": "denominacao",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "fundamento_legal",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
                     "name": "arquivo_origem",
                     "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "data_carga",
+                    "type": "timestamp without time zone",
                     "nullable": false
                 }
             ],
@@ -169,39 +169,9 @@
             "name": "servidores_tlp",
             "columns": [
                 {
-                    "name": "requisitado_com_funcao_confianca",
-                    "type": "boolean",
+                    "name": "id",
+                    "type": "bigint",
                     "nullable": false
-                },
-                {
-                    "name": "efetivo_com_cargo_comissao",
-                    "type": "boolean",
-                    "nullable": false
-                },
-                {
-                    "name": "grau_jurisdicao",
-                    "type": "text",
-                    "nullable": true
-                },
-                {
-                    "name": "numero",
-                    "type": "integer",
-                    "nullable": true
-                },
-                {
-                    "name": "funcao_confianca",
-                    "type": "text",
-                    "nullable": true
-                },
-                {
-                    "name": "requisitado",
-                    "type": "boolean",
-                    "nullable": false
-                },
-                {
-                    "name": "cargo_efetivo",
-                    "type": "text",
-                    "nullable": true
                 },
                 {
                     "name": "data_referencia",
@@ -209,7 +179,47 @@
                     "nullable": false
                 },
                 {
+                    "name": "grupo_tlp",
+                    "type": "character varying",
+                    "nullable": false
+                },
+                {
+                    "name": "categoria_tlp",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "numero",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "matricula",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "nome",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "nome_normalizado",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "lotacao",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
                     "name": "origem_requisitado",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "cargo_efetivo",
                     "type": "text",
                     "nullable": true
                 },
@@ -219,7 +229,37 @@
                     "nullable": true
                 },
                 {
+                    "name": "funcao_confianca",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "efetivo",
+                    "type": "boolean",
+                    "nullable": false
+                },
+                {
+                    "name": "efetivo_com_cargo_comissao",
+                    "type": "boolean",
+                    "nullable": false
+                },
+                {
+                    "name": "efetivo_com_funcao_confianca",
+                    "type": "boolean",
+                    "nullable": false
+                },
+                {
+                    "name": "requisitado",
+                    "type": "boolean",
+                    "nullable": false
+                },
+                {
                     "name": "requisitado_com_cargo_comissao",
+                    "type": "boolean",
+                    "nullable": false
+                },
+                {
+                    "name": "requisitado_com_funcao_confianca",
                     "type": "boolean",
                     "nullable": false
                 },
@@ -229,44 +269,9 @@
                     "nullable": false
                 },
                 {
-                    "name": "efetivo",
-                    "type": "boolean",
-                    "nullable": false
-                },
-                {
-                    "name": "grupo_tlp",
-                    "type": "character varying",
-                    "nullable": false
-                },
-                {
-                    "name": "nome",
-                    "type": "text",
-                    "nullable": false
-                },
-                {
-                    "name": "lotacao",
+                    "name": "grau_jurisdicao",
                     "type": "text",
                     "nullable": true
-                },
-                {
-                    "name": "categoria_tlp",
-                    "type": "text",
-                    "nullable": false
-                },
-                {
-                    "name": "data_carga",
-                    "type": "timestamp without time zone",
-                    "nullable": false
-                },
-                {
-                    "name": "efetivo_com_funcao_confianca",
-                    "type": "boolean",
-                    "nullable": false
-                },
-                {
-                    "name": "id",
-                    "type": "bigint",
-                    "nullable": false
                 },
                 {
                     "name": "arquivo_origem",
@@ -274,14 +279,9 @@
                     "nullable": false
                 },
                 {
-                    "name": "matricula",
-                    "type": "text",
+                    "name": "data_carga",
+                    "type": "timestamp without time zone",
                     "nullable": false
-                },
-                {
-                    "name": "nome_normalizado",
-                    "type": "text",
-                    "nullable": true
                 }
             ],
             "primary_key": [
@@ -293,8 +293,8 @@
             "name": "unidades_tlp",
             "columns": [
                 {
-                    "name": "lotacao_real_efetivos",
-                    "type": "integer",
+                    "name": "id",
+                    "type": "bigint",
                     "nullable": false
                 },
                 {
@@ -303,17 +303,12 @@
                     "nullable": false
                 },
                 {
-                    "name": "lotacao_real_requisitados",
-                    "type": "integer",
+                    "name": "grupo_tlp",
+                    "type": "character varying",
                     "nullable": false
                 },
                 {
-                    "name": "lotacao_paradigma",
-                    "type": "integer",
-                    "nullable": true
-                },
-                {
-                    "name": "arquivo_origem",
+                    "name": "categoria_tlp",
                     "type": "text",
                     "nullable": false
                 },
@@ -323,8 +318,13 @@
                     "nullable": true
                 },
                 {
-                    "name": "lotacao_real_sem_vinculo",
-                    "type": "integer",
+                    "name": "tipo",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "unidade",
+                    "type": "text",
                     "nullable": false
                 },
                 {
@@ -333,23 +333,28 @@
                     "nullable": true
                 },
                 {
-                    "name": "tipo",
+                    "name": "municipio_ibge",
                     "type": "text",
                     "nullable": true
                 },
                 {
-                    "name": "categoria_tlp",
-                    "type": "text",
+                    "name": "lotacao_paradigma",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "lotacao_real_efetivos",
+                    "type": "integer",
                     "nullable": false
                 },
                 {
-                    "name": "data_carga",
-                    "type": "timestamp without time zone",
+                    "name": "lotacao_real_requisitados",
+                    "type": "integer",
                     "nullable": false
                 },
                 {
-                    "name": "id",
-                    "type": "bigint",
+                    "name": "lotacao_real_sem_vinculo",
+                    "type": "integer",
                     "nullable": false
                 },
                 {
@@ -358,19 +363,14 @@
                     "nullable": false
                 },
                 {
-                    "name": "grupo_tlp",
-                    "type": "character varying",
-                    "nullable": false
-                },
-                {
-                    "name": "unidade",
+                    "name": "arquivo_origem",
                     "type": "text",
                     "nullable": false
                 },
                 {
-                    "name": "municipio_ibge",
-                    "type": "text",
-                    "nullable": true
+                    "name": "data_carga",
+                    "type": "timestamp without time zone",
+                    "nullable": false
                 }
             ],
             "primary_key": [
@@ -382,12 +382,12 @@
             "name": "unidades_tlp_cargos_funcoes",
             "columns": [
                 {
-                    "name": "codigo",
-                    "type": "text",
-                    "nullable": true
+                    "name": "id",
+                    "type": "bigint",
+                    "nullable": false
                 },
                 {
-                    "name": "id",
+                    "name": "unidade_tlp_id",
                     "type": "bigint",
                     "nullable": false
                 },
@@ -397,9 +397,9 @@
                     "nullable": false
                 },
                 {
-                    "name": "quantidade",
-                    "type": "integer",
-                    "nullable": false
+                    "name": "codigo",
+                    "type": "text",
+                    "nullable": true
                 },
                 {
                     "name": "denominacao",
@@ -407,8 +407,8 @@
                     "nullable": false
                 },
                 {
-                    "name": "unidade_tlp_id",
-                    "type": "bigint",
+                    "name": "quantidade",
+                    "type": "integer",
                     "nullable": false
                 }
             ],

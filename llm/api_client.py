@@ -4,7 +4,7 @@ def executar_sql_na_api(sql_gerado: str):
     # Rota definida no FastAPI do Gelson
     url_api = "http://localhost:8000/query" 
     
-    # Payload ajustado para bater com o QueryRequest e o Swagger (image_e35da1.png)
+    # Payload ajustado para bater com o QueryRequest e o Swagger
     payload = {
         "sql": sql_gerado
     }

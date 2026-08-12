@@ -3,7 +3,7 @@ import json
 from providers import LLMProvider
 
 class TradutorNL2SQL:
-    def __init__(self, llm_provider: LLMProvider, nome_catalogo="data_catalog.example.json"):
+    def __init__(self, llm_provider: LLMProvider, nome_catalogo="data_catalog.json"):
         self.llm = llm_provider
         
         # Pega o diretório exato da pasta llm/ onde este script está

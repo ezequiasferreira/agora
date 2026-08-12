@@ -25,7 +25,7 @@ class GeminiLLM(LLMProvider):
             # Se for um erro de limite de cota (Rate Limit / 429)
             if "429" in erro_str or "Quota exceeded" in erro_str:
                 print("\n[Aviso] Limite da API gratuita atingido. Pausando para não quebrar o sistema.")
-                # Retornamos uma string JSON "fake" que será lida perfeitamente pelo seu TradutorNL2SQL
+                # Retorna um JSON padronizado para que o restante da aplicação possa tratar o erro da mesma forma que trata uma resposta da LLM.
                 return """{
                   "status": "NOT_ANSWERABLE",
                   "message": "O sistema está processando muitos pedidos no momento (Limite de Cota). Por favor, aguarde alguns segundos e tente novamente."

@@ -166,22 +166,18 @@ def test_deve_retornar_query_para_agregacao(
 
 
 # ============================================================
-# TESTE 3 — LIMITAÇÃO SEMÂNTICA DO CATÁLOGO
+# TESTE 3 — DOMÍNIO SEMÂNTICO ENRIQUECIDO
 # ============================================================
 
-def test_deve_retornar_not_answerable_quando_catalogo_nao_informa_dominio(
+def test_deve_retornar_query_quando_catalogo_informa_dominio(
     tradutor,
 ):
     """
-    O catálogo estrutural atual informa a existência da coluna
-    grau_jurisdicao, mas não informa os valores existentes nela.
+    O catálogo enriquecido informa valores reais de domínio
+    para colunas categóricas de baixa cardinalidade.
 
-    Portanto, a LLM não deve inventar quais valores representam
-    unidades judiciárias de primeiro e segundo graus.
-
-    Quando o catálogo passar a fornecer distinct_values ou outro
-    enriquecimento semântico equivalente, este teste deverá ser
-    revisado para esperar QUERY.
+    Isso permite que a LLM use categorias existentes na base
+    sem inventar códigos ou valores.
     """
 
     pergunta = (
@@ -195,18 +191,41 @@ def test_deve_retornar_not_answerable_quando_catalogo_nao_informa_dominio(
 
     assert resultado.get(
         "status"
-    ) == "NOT_ANSWERABLE", (
-        f"Esperado NOT_ANSWERABLE, "
+    ) == "QUERY", (
+        f"Esperado QUERY, "
         f"mas retornou {resultado}"
     )
 
-    assert resultado.get("sql") is None, (
-        "A consulta não deve gerar SQL enquanto os valores "
-        "de domínio não estiverem disponíveis no catálogo."
+    sql_gerado = resultado.get(
+        "sql",
+        "",
     )
 
-    assert resultado.get("message") is not None, (
-        "A resposta deve explicar a limitação dos dados."
+    assert sql_gerado, (
+        "Esperado SQL para consulta baseada "
+        "no domínio semântico do catálogo."
+    )
+
+    assert "SELECT" in sql_gerado.upper(), (
+        "O SQL gerado não contém SELECT."
+    )
+
+    assert "SERVIDORES_TLP" in sql_gerado.upper(), (
+        "A consulta deve utilizar a tabela "
+        "servidores_tlp."
+    )
+
+    assert "CATEGORIA_TLP" in sql_gerado.upper(), (
+        "A consulta deve utilizar a categoria TLP "
+        "disponível no catálogo."
+    )
+
+    assert (
+        "UNIDADES JUDICIÁRIAS DE PRIMEIRO E SEGUNDO GRAUS"
+        in sql_gerado.upper()
+    ), (
+        "A consulta deve utilizar o valor de domínio "
+        "existente no catálogo."
     )
 
 

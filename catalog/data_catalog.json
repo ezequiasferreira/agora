@@ -176,17 +176,30 @@
                 {
                     "name": "data_referencia",
                     "type": "date",
-                    "nullable": false
+                    "nullable": false,
+                    "distinct_values": [
+                        "2025-01-01"
+                    ]
                 },
                 {
                     "name": "grupo_tlp",
                     "type": "character varying",
-                    "nullable": false
+                    "nullable": false,
+                    "distinct_values": [
+                        "TLP 1",
+                        "TLP 2",
+                        "TLP 3"
+                    ]
                 },
                 {
                     "name": "categoria_tlp",
                     "type": "text",
-                    "nullable": false
+                    "nullable": false,
+                    "distinct_values": [
+                        "UNIDADES DE APOIO DIRETO À ATIVIDADE JUDICANTE",
+                        "UNIDADES DE APOIO INDIRETO À ATIVIDADE JUDICANTE",
+                        "UNIDADES JUDICIÁRIAS DE PRIMEIRO E SEGUNDO GRAUS"
+                    ]
                 },
                 {
                     "name": "numero",
@@ -221,7 +234,25 @@
                 {
                     "name": "cargo_efetivo",
                     "type": "text",
-                    "nullable": true
+                    "nullable": true,
+                    "distinct_values": [
+                        "ANALISTA JUDICIÁRIO - ADMINISTRAÇÃO",
+                        "ANALISTA JUDICIÁRIO - ANÁLISE DE SISTEMAS",
+                        "ANALISTA JUDICIÁRIO - ARQUITETURA",
+                        "ANALISTA JUDICIÁRIO - BIBLIOTECONOMIA",
+                        "ANALISTA JUDICIÁRIO - CONTABILIDADE",
+                        "ANALISTA JUDICIÁRIO - DIREITO",
+                        "ANALISTA JUDICIÁRIO - ENGENHARIA ELÉTRICA",
+                        "ANALISTA JUDICIÁRIO - OFICIAL DE JUSTIÇA",
+                        "ANALISTA JUDICIÁRIO - PEDAGOGIA",
+                        "ANALISTA JUDICIÁRIO - PSICOLOGIA",
+                        "ANALISTA JUDICIÁRIO - SERVIÇO SOCIAL",
+                        "AUXILIAR JUDICIÁRIO",
+                        "TÉCNICO JUDICIÁRIO",
+                        "TÉCNICO JUDICIÁRIO - ACOMPANHAMENTO DE PENAS E MEDIDAS ALTERNATIVAS",
+                        "TÉCNICO JUDICIÁRIO - OFICIAL DE JUSTIÇA",
+                        "TÉCNICO JUDICIÁRIO - PROTEÇÃO À CRIANÇA E AO ADOLESCENTE"
+                    ]
                 },
                 {
                     "name": "cargo_comissao",
@@ -231,7 +262,29 @@
                 {
                     "name": "funcao_confianca",
                     "type": "text",
-                    "nullable": true
+                    "nullable": true,
+                    "distinct_values": [
+                        "ASSESSOR(A) DE SAÚDE",
+                        "CHEFE ADJUNTO(A) DO GABINETE MILITAR",
+                        "CHEFE DE SETOR",
+                        "CHEFE DO GABINETE MILITAR",
+                        "CONSULTOR(A) TÉCNICO(A)",
+                        "COORDENADOR(A) ACADÊMICO(A)",
+                        "COORDENADOR(A) DE NÚCLEO",
+                        "DIRETOR(A) DE GESTÃO",
+                        "DIRETOR(A) DE SECRETARIA",
+                        "FUNÇÃO OPERACIONAL DE FÓRUM",
+                        "FUNÇÃO TÉCNICA DE ASSESSORAMENTO",
+                        "FUNÇÃO TÉCNICA ESPECIALIZADA",
+                        "FUNÇÃO TÉCNICA ESPECIALIZADA - COORDENADOR(A) DE CEJURES",
+                        "FUNÇÃO TÉCNICA ESPECIALIZADA - MEMBRO DA CPS",
+                        "FUNÇÃO TÉCNICA ESPECIALIZADA DE PREGOEIRO(A)",
+                        "FUNÇÃO TÉCNICA ESPECIALIZADA EM ELABORAÇÃO DE PROJETOS DE OBRAS E SERVIÇOS DE ENGENHARIA",
+                        "GESTOR(A) DE FÓRUM",
+                        "PRESIDENTE DE COMISSÃO PERMANENTE",
+                        "SUBCOORDENADOR(A)",
+                        "SUBSECRETÁRIO(A)"
+                    ]
                 },
                 {
                     "name": "efetivo",
@@ -271,7 +324,16 @@
                 {
                     "name": "grau_jurisdicao",
                     "type": "text",
-                    "nullable": true
+                    "nullable": true,
+                    "distinct_values": [
+                        "ESCOLAS JUDICIAIS E DE MAGISTRATURA",
+                        "TECNOLOGIA DA INFORMAÇÃO",
+                        "UNIDADE DE APOIO DIRETO À ATIVIDADE JUDICANTE DE PRIMEIRO E SEGUNDO GRAUS",
+                        "UNIDADE DE APOIO DIRETO À ATIVIDADE JUDICANTE DE PRIMEIRO GRAU",
+                        "UNIDADE DE APOIO INDIRETO À ATIVIDADE JUDICANTE",
+                        "UNIDADE JUDICIÁRIA DE PRIMEIRO GRAU",
+                        "UNIDADE JUDICIÁRIA DE SEGUNDO GRAU"
+                    ]
                 },
                 {
                     "name": "arquivo_origem",
@@ -300,27 +362,57 @@
                 {
                     "name": "data_referencia",
                     "type": "date",
-                    "nullable": false
+                    "nullable": false,
+                    "distinct_values": [
+                        "2025-01-01"
+                    ]
                 },
                 {
                     "name": "grupo_tlp",
                     "type": "character varying",
-                    "nullable": false
+                    "nullable": false,
+                    "distinct_values": [
+                        "TLP 1",
+                        "TLP 2",
+                        "TLP 3"
+                    ]
                 },
                 {
                     "name": "categoria_tlp",
                     "type": "text",
-                    "nullable": false
+                    "nullable": false,
+                    "distinct_values": [
+                        "UNIDADES DE APOIO DIRETO À ATIVIDADE JUDICANTE",
+                        "UNIDADES DE APOIO INDIRETO À ATIVIDADE JUDICANTE",
+                        "UNIDADES JUDICIÁRIAS DE PRIMEIRO E SEGUNDO GRAUS"
+                    ]
                 },
                 {
                     "name": "grau",
                     "type": "text",
-                    "nullable": true
+                    "nullable": true,
+                    "distinct_values": [
+                        "1º GRAU",
+                        "1º e 2º GRAU",
+                        "2º GRAU"
+                    ]
                 },
                 {
                     "name": "tipo",
                     "type": "text",
-                    "nullable": true
+                    "nullable": true,
+                    "distinct_values": [
+                        "Gabinete de Desembargador",
+                        "Juizado Especial",
+                        "Secretarias de Orgãos Francionários - Conselho de Magistratura",
+                        "Secretarias de Orgãos Francionários - Câmara Criminal",
+                        "Secretarias de Orgãos Francionários - Câmara Cível",
+                        "Secretarias de Orgãos Francionários - Câmaras Reunidas",
+                        "Secretarias de Orgãos Francionários - Secretaria das Câmaras Reunidas",
+                        "Secretarias de Orgãos Francionários - Tribunal Pleno",
+                        "Turma Recursal",
+                        "Vara"
+                    ]
                 },
                 {
                     "name": "unidade",
@@ -330,12 +422,25 @@
                 {
                     "name": "uf",
                     "type": "text",
-                    "nullable": true
+                    "nullable": true,
+                    "distinct_values": [
+                        "RR"
+                    ]
                 },
                 {
                     "name": "municipio_ibge",
                     "type": "text",
-                    "nullable": true
+                    "nullable": true,
+                    "distinct_values": [
+                        "1400050",
+                        "1400100",
+                        "1400159",
+                        "1400209",
+                        "1400308",
+                        "1400456",
+                        "1400472",
+                        "1400605"
+                    ]
                 },
                 {
                     "name": "lotacao_paradigma",
@@ -394,12 +499,37 @@
                 {
                     "name": "categoria",
                     "type": "text",
-                    "nullable": false
+                    "nullable": false,
+                    "distinct_values": [
+                        "CARGO_COMISSAO",
+                        "FUNCAO_CONFIANCA"
+                    ]
                 },
                 {
                     "name": "codigo",
                     "type": "text",
-                    "nullable": true
+                    "nullable": true,
+                    "distinct_values": [
+                        "TJ/DCA-1",
+                        "TJ/DCA-10",
+                        "TJ/DCA-11",
+                        "TJ/DCA-13",
+                        "TJ/DCA-14",
+                        "TJ/DCA-15",
+                        "TJ/DCA-16",
+                        "TJ/DCA-19",
+                        "TJ/DCA-2",
+                        "TJ/DCA-6",
+                        "TJ/DCA-7",
+                        "TJ/DCA-9",
+                        "TJ/FC-1",
+                        "TJ/FC-2",
+                        "TJ/FC-3",
+                        "TJ/FC-4",
+                        "TJ/FC-5",
+                        "TJ/FC-6",
+                        "TJ/FC-7"
+                    ]
                 },
                 {
                     "name": "denominacao",

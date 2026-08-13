@@ -7,27 +7,43 @@ try:
     from .providers import OpenAILLM, GeminiLLM
     from .translator import TradutorNL2SQL
     from .api_client import executar_sql_na_api
+    from .responder import Respondedor
 except ImportError:
     from providers import OpenAILLM, GeminiLLM
     from translator import TradutorNL2SQL
     from api_client import executar_sql_na_api
+    from responder import Respondedor
 
 
 # ============================================================
 # CONFIGURAÇÃO
 # ============================================================
 
-DIRETORIO_BASE = os.path.dirname(os.path.abspath(__file__))
+DIRETORIO_BASE = os.path.dirname(
+    os.path.abspath(__file__)
+)
 
 # Carrega especificamente o .env existente dentro de llm/
-CAMINHO_ENV = os.path.join(DIRETORIO_BASE, ".env")
+CAMINHO_ENV = os.path.join(
+    DIRETORIO_BASE,
+    ".env",
+)
+
 load_dotenv(CAMINHO_ENV)
 
 # Provedor padrão do MVP
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai").strip().lower()
+LLM_PROVIDER = os.getenv(
+    "LLM_PROVIDER",
+    "openai",
+).strip().lower()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+OPENAI_API_KEY = os.getenv(
+    "OPENAI_API_KEY"
+)
+
+GEMINI_API_KEY = os.getenv(
+    "GEMINI_API_KEY"
+)
 
 OPENAI_MODEL = os.getenv(
     "OPENAI_MODEL",
@@ -56,7 +72,8 @@ def criar_provedor():
     if LLM_PROVIDER == "openai":
         if not OPENAI_API_KEY:
             raise ValueError(
-                "OPENAI_API_KEY não encontrada no arquivo llm/.env."
+                "OPENAI_API_KEY não encontrada "
+                "no arquivo llm/.env."
             )
 
         return OpenAILLM(
@@ -67,7 +84,8 @@ def criar_provedor():
     if LLM_PROVIDER == "gemini":
         if not GEMINI_API_KEY:
             raise ValueError(
-                "GEMINI_API_KEY não encontrada no arquivo llm/.env."
+                "GEMINI_API_KEY não encontrada "
+                "no arquivo llm/.env."
             )
 
         return GeminiLLM(
@@ -82,208 +100,325 @@ def criar_provedor():
 
 
 # ============================================================
-# INICIALIZAÇÃO
+# EXECUÇÃO INTERATIVA
 # ============================================================
 
-provedor = criar_provedor()
+def main():
+    provedor = criar_provedor()
 
-tradutor = TradutorNL2SQL(
-    llm_provider=provedor
-)
-
-print("Ágora — Módulo NL → SQL")
-print(f"Provedor: {LLM_PROVIDER}")
-
-if LLM_PROVIDER == "openai":
-    print(f"Modelo: {OPENAI_MODEL}")
-else:
-    print(f"Modelo: {GEMINI_MODEL}")
-
-print("Digite 'sair' para encerrar.")
-print("-" * 60)
-
-
-# ============================================================
-# LOOP INTERATIVO
-# ============================================================
-
-while True:
-    pergunta = input("\nDigite sua pergunta: ").strip()
-
-    if pergunta.lower() in {
-        "sair",
-        "exit",
-        "quit",
-        "0",
-    }:
-        break
-
-    if not pergunta:
-        continue
-
-    log_execucao = {
-        "question": pergunta,
-        "provider": LLM_PROVIDER,
-        "status_llm": None,
-        "generated_sql": None,
-        "api_response": None,
-        "error": None,
-    }
-
-    print("\nProcessando com a LLM...")
-
-    resultado_llm = tradutor.processar_pergunta(
-        pergunta
+    tradutor = TradutorNL2SQL(
+        llm_provider=provedor
     )
 
-    status = resultado_llm.get("status")
-    log_execucao["status_llm"] = status
+    respondedor = Respondedor(
+        llm_provider=provedor
+    )
 
-    # ========================================================
-    # QUERY
-    # ========================================================
+    print("Ágora — Consulta Inteligente")
+    print(f"Provedor: {LLM_PROVIDER}")
 
-    if status == "QUERY":
-        query_string = resultado_llm.get("sql")
+    if LLM_PROVIDER == "openai":
+        print(f"Modelo: {OPENAI_MODEL}")
+    else:
+        print(f"Modelo: {GEMINI_MODEL}")
 
-        if not query_string:
-            log_execucao["error"] = (
-                "A LLM retornou QUERY sem uma instrução SQL."
+    print("Digite 'sair' para encerrar.")
+    print("-" * 60)
+
+    while True:
+        pergunta = input(
+            "\nDigite sua pergunta: "
+        ).strip()
+
+        if pergunta.lower() in {
+            "sair",
+            "exit",
+            "quit",
+            "0",
+        }:
+            break
+
+        if not pergunta:
+            continue
+
+        log_execucao = {
+            "question": pergunta,
+            "provider": LLM_PROVIDER,
+            "status_llm": None,
+            "generated_sql": None,
+            "api_response": None,
+            "final_response": None,
+            "error": None,
+        }
+
+        print(
+            "\nProcessando pergunta..."
+        )
+
+        resultado_llm = (
+            tradutor.processar_pergunta(
+                pergunta
+            )
+        )
+
+        status = resultado_llm.get(
+            "status"
+        )
+
+        log_execucao[
+            "status_llm"
+        ] = status
+
+        # ====================================================
+        # QUERY
+        # ====================================================
+
+        if status == "QUERY":
+            query_string = (
+                resultado_llm.get("sql")
             )
 
-            print(
-                "[FORMAT_ERROR] "
-                "A LLM não retornou uma instrução SQL."
-            )
-
-        else:
-            log_execucao["generated_sql"] = (
-                query_string
-            )
-
-            print(
-                f"\n[{status}] SQL gerado:"
-            )
-            print(query_string)
-
-            print(
-                "\nEnviando consulta para "
-                "POST /query..."
-            )
-
-            try:
-                resposta_api = executar_sql_na_api(
-                    query_string
+            if not query_string:
+                mensagem = (
+                    "A LLM retornou QUERY sem "
+                    "uma instrução SQL."
                 )
 
-                log_execucao["api_response"] = (
-                    resposta_api
-                )
+                log_execucao[
+                    "error"
+                ] = mensagem
 
-                print("\nResposta da API:")
                 print(
-                    json.dumps(
-                        resposta_api,
-                        indent=2,
-                        ensure_ascii=False,
+                    f"\n[FORMAT_ERROR] "
+                    f"{mensagem}"
+                )
+
+            else:
+                log_execucao[
+                    "generated_sql"
+                ] = query_string
+
+                print(
+                    "\nConsulta compreendida."
+                )
+
+                print(
+                    "Consultando os dados..."
+                )
+
+                resposta_api = (
+                    executar_sql_na_api(
+                        query_string
                     )
                 )
 
-            except Exception as exc:
-                log_execucao["error"] = str(exc)
+                log_execucao[
+                    "api_response"
+                ] = resposta_api
 
-                print(
-                    "[API_ERROR] "
-                    "Falha ao consultar a API do Ágora."
+                if not resposta_api.get(
+                    "success"
+                ):
+                    mensagem = (
+                        resposta_api.get(
+                            "message",
+                            (
+                                "Não foi possível "
+                                "executar a consulta."
+                            ),
+                        )
+                    )
+
+                    log_execucao[
+                        "error"
+                    ] = mensagem
+
+                    print(
+                        f"\n[API_ERROR] "
+                        f"{mensagem}"
+                    )
+
+                else:
+                    print(
+                        "Preparando resposta..."
+                    )
+
+                    resposta_final = (
+                        respondedor.gerar_resposta(
+                            pergunta=pergunta,
+                            resposta_api=resposta_api,
+                        )
+                    )
+
+                    log_execucao[
+                        "final_response"
+                    ] = resposta_final
+
+                    status_final = (
+                        resposta_final.get(
+                            "status"
+                        )
+                    )
+
+                    mensagem_final = (
+                        resposta_final.get(
+                            "message"
+                        )
+                    )
+
+                    if status_final == "ANSWER":
+                        print(
+                            "\nÁgora:"
+                        )
+
+                        print(
+                            mensagem_final
+                        )
+
+                    elif status_final == "NO_DATA":
+                        print(
+                            "\nÁgora:"
+                        )
+
+                        print(
+                            mensagem_final
+                        )
+
+                    else:
+                        log_execucao[
+                            "error"
+                        ] = mensagem_final
+
+                        print(
+                            f"\n[{status_final}] "
+                            f"{mensagem_final}"
+                        )
+
+        # ====================================================
+        # LIMITAÇÃO DOS DADOS
+        # ====================================================
+
+        elif status == "NOT_ANSWERABLE":
+            mensagem = (
+                resultado_llm.get(
+                    "message"
                 )
+            )
 
-    # ========================================================
-    # LIMITAÇÃO DOS DADOS
-    # ========================================================
+            log_execucao[
+                "error"
+            ] = mensagem
 
-    elif status == "NOT_ANSWERABLE":
-        mensagem = resultado_llm.get(
-            "message"
-        )
+            print(
+                "\nÁgora:"
+            )
 
-        log_execucao["error"] = mensagem
+            print(
+                mensagem
+            )
+
+        # ====================================================
+        # AMBIGUIDADE
+        # ====================================================
+
+        elif status == "NEEDS_CLARIFICATION":
+            mensagem = (
+                resultado_llm.get(
+                    "message"
+                )
+            )
+
+            log_execucao[
+                "error"
+            ] = mensagem
+
+            print(
+                "\nÁgora:"
+            )
+
+            print(
+                mensagem
+            )
+
+        # ====================================================
+        # ERRO DO PROVEDOR
+        # ====================================================
+
+        elif status == "PROVIDER_ERROR":
+            mensagem = (
+                resultado_llm.get(
+                    "message"
+                )
+            )
+
+            log_execucao[
+                "error"
+            ] = mensagem
+
+            print(
+                f"\n[{status}] "
+                f"{mensagem}"
+            )
+
+        # ====================================================
+        # ERRO DE FORMATO
+        # ====================================================
+
+        elif status == "FORMAT_ERROR":
+            mensagem = (
+                resultado_llm.get(
+                    "message"
+                )
+            )
+
+            log_execucao[
+                "error"
+            ] = mensagem
+
+            print(
+                f"\n[{status}] "
+                f"{mensagem}"
+            )
+
+        # ====================================================
+        # STATUS DESCONHECIDO
+        # ====================================================
+
+        else:
+            mensagem = (
+                f"Status não reconhecido: "
+                f"{status}"
+            )
+
+            log_execucao[
+                "error"
+            ] = mensagem
+
+            print(
+                f"\n[INTERNAL_ERROR] "
+                f"{mensagem}"
+            )
+
+        # ====================================================
+        # LOG TÉCNICO
+        # ====================================================
 
         print(
-            f"\n[{status}] {mensagem}"
+            "\n--- LOG DE EXECUÇÃO ---"
         )
-
-    # ========================================================
-    # AMBIGUIDADE
-    # ========================================================
-
-    elif status == "NEEDS_CLARIFICATION":
-        mensagem = resultado_llm.get(
-            "message"
-        )
-
-        log_execucao["error"] = mensagem
 
         print(
-            f"\n[{status}] {mensagem}"
+            json.dumps(
+                log_execucao,
+                indent=2,
+                ensure_ascii=False,
+            )
         )
-
-    # ========================================================
-    # ERRO DO PROVEDOR
-    # ========================================================
-
-    elif status == "PROVIDER_ERROR":
-        mensagem = resultado_llm.get(
-            "message"
-        )
-
-        log_execucao["error"] = mensagem
 
         print(
-            f"\n[{status}] {mensagem}"
+            "-" * 60
         )
 
-    # ========================================================
-    # ERRO DE FORMATO
-    # ========================================================
 
-    elif status == "FORMAT_ERROR":
-        mensagem = resultado_llm.get(
-            "message"
-        )
-
-        log_execucao["error"] = mensagem
-
-        print(
-            f"\n[{status}] {mensagem}"
-        )
-
-    # ========================================================
-    # STATUS DESCONHECIDO
-    # ========================================================
-
-    else:
-        mensagem = (
-            f"Status não reconhecido: {status}"
-        )
-
-        log_execucao["error"] = mensagem
-
-        print(
-            f"\n[INTERNAL_ERROR] {mensagem}"
-        )
-
-    # ========================================================
-    # LOG
-    # ========================================================
-
-    print("\n--- LOG DE EXECUÇÃO ---")
-
-    print(
-        json.dumps(
-            log_execucao,
-            indent=2,
-            ensure_ascii=False,
-        )
-    )
-
-    print("-" * 60)
+if __name__ == "__main__":
+    main()

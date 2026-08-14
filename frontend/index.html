@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Ágora</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+<body>
+    <main class="page">
+        <section class="hero">
+            <div class="brand">
+                <div class="brand-mark">
+                    A
+                </div>
+
+                <div>
+                    <h1>Ágora</h1>
+
+                    <p>
+                        Converse com os dados da organização
+                    </p>
+                </div>
+            </div>
+
+            <div class="status">
+                <span class="status-dot"></span>
+                Sistema disponível
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <span class="eyebrow">
+                    CONSULTA INTELIGENTE
+                </span>
+
+                <h2>
+                    O que você deseja saber?
+                </h2>
+
+                <p>
+                    Faça uma pergunta em linguagem natural.
+                    O Ágora consulta os dados disponíveis e
+                    apresenta uma resposta objetiva.
+                </p>
+            </div>
+
+            <form
+                id="ask-form"
+                class="ask-form"
+            >
+                <label
+                    for="question"
+                    class="sr-only"
+                >
+                    Digite sua pergunta
+                </label>
+
+                <textarea
+                    id="question"
+                    name="question"
+                    rows="4"
+                    placeholder="Ex.: Quantos servidores pertencem às unidades judiciárias de primeiro e segundo graus?"
+                    required
+                ></textarea>
+
+                <div class="form-actions">
+                    <span class="hint">
+                        Pressione Enter para enviar
+                    </span>
+
+                    <button
+                        id="submit-button"
+                        type="submit"
+                    >
+                        Perguntar
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section
+            id="response-section"
+            class="response-section hidden"
+            aria-live="polite"
+        >
+            <div class="response-label">
+                Ágora
+            </div>
+
+            <div class="response-card">
+                <div
+                    id="loading"
+                    class="loading hidden"
+                >
+                    <span class="spinner"></span>
+
+                    <span>
+                        Consultando os dados...
+                    </span>
+                </div>
+
+                <div
+                    id="answer"
+                    class="answer hidden"
+                ></div>
+
+                <div
+                    id="error"
+                    class="error hidden"
+                ></div>
+
+                <details
+                    id="technical-details"
+                    class="technical-details hidden"
+                >
+                    <summary>
+                        Detalhes técnicos
+                    </summary>
+
+                    <div class="technical-grid">
+                        <div>
+                            <span class="technical-title">
+                                Status
+                            </span>
+
+                            <code id="technical-status">
+                                —
+                            </code>
+                        </div>
+
+                        <div>
+                            <span class="technical-title">
+                                Tempo da consulta
+                            </span>
+
+                            <code id="technical-time">
+                                —
+                            </code>
+                        </div>
+                    </div>
+
+                    <div class="technical-block">
+                        <span class="technical-title">
+                            SQL gerado
+                        </span>
+
+                        <pre id="technical-sql">—</pre>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <section class="examples">
+            <span class="examples-title">
+                Exemplos
+            </span>
+
+            <div class="example-list">
+                <button
+                    type="button"
+                    class="example"
+                    data-question="Quantos registros de remuneração existem em janeiro de 2025?"
+                >
+                    Registros de remuneração em janeiro
+                </button>
+
+                <button
+                    type="button"
+                    class="example"
+                    data-question="Quantos servidores pertencem às unidades judiciárias de primeiro e segundo graus?"
+                >
+                    Servidores por unidade judiciária
+                </button>
+
+                <button
+                    type="button"
+                    class="example"
+                    data-question="Qual é a formação acadêmica dos servidores?"
+                >
+                    Informação não disponível
+                </button>
+
+                <button
+                    type="button"
+                    class="example"
+                    data-question="Qual foi a maior remuneração?"
+                >
+                    Pergunta ambígua
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

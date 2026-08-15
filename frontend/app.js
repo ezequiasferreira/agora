@@ -9,6 +9,7 @@ const questionInput = document.getElementById("question");
 const submitButton = document.getElementById("submit-button");
 
 const responseSection = document.getElementById("response-section");
+const responseCard = document.querySelector(".response-card");
 const loading = document.getElementById("loading");
 const answer = document.getElementById("answer");
 const error = document.getElementById("error");
@@ -19,18 +20,23 @@ const technicalTime = document.getElementById("technical-time");
 const technicalSql = document.getElementById("technical-sql");
 
 const technicalModel = document.getElementById("technical-model");
+
 const technicalTotalTokens = document.getElementById(
     "technical-total-tokens"
 );
+
 const technicalInputTokens = document.getElementById(
     "technical-input-tokens"
 );
+
 const technicalCachedTokens = document.getElementById(
     "technical-cached-tokens"
 );
+
 const technicalOutputTokens = document.getElementById(
     "technical-output-tokens"
 );
+
 const technicalCost = document.getElementById(
     "technical-cost"
 );
@@ -38,6 +44,7 @@ const technicalCost = document.getElementById(
 const technicalUsageBreakdown = document.getElementById(
     "technical-usage-breakdown"
 );
+
 const technicalUsage = document.getElementById(
     "technical-usage"
 );
@@ -88,6 +95,104 @@ function formatarCusto(valor) {
 }
 
 
+function limparEstadoResposta() {
+    responseCard.classList.remove(
+        "response-state-answer",
+        "response-state-not-answerable",
+        "response-state-clarification",
+        "response-state-error"
+    );
+
+    answer.classList.remove(
+        "answer-normal",
+        "answer-not-answerable",
+        "answer-clarification"
+    );
+}
+
+
+function aplicarEstadoResposta(status) {
+    limparEstadoResposta();
+
+    if (
+        status === "ANSWER" ||
+        status === "NO_DATA"
+    ) {
+        responseCard.classList.add(
+            "response-state-answer"
+        );
+
+        answer.classList.add(
+            "answer-normal"
+        );
+
+        return;
+    }
+
+    if (status === "NOT_ANSWERABLE") {
+        responseCard.classList.add(
+            "response-state-not-answerable"
+        );
+
+        answer.classList.add(
+            "answer-not-answerable"
+        );
+
+        return;
+    }
+
+    if (status === "NEEDS_CLARIFICATION") {
+        responseCard.classList.add(
+            "response-state-clarification"
+        );
+
+        answer.classList.add(
+            "answer-clarification"
+        );
+
+        return;
+    }
+
+    responseCard.classList.add(
+        "response-state-error"
+    );
+}
+
+
+function criarMensagemResposta(
+    titulo,
+    mensagem
+) {
+    answer.replaceChildren();
+
+    const tituloElemento =
+        document.createElement("div");
+
+    tituloElemento.className =
+        "answer-state-title";
+
+    tituloElemento.textContent =
+        titulo;
+
+    const mensagemElemento =
+        document.createElement("div");
+
+    mensagemElemento.className =
+        "answer-state-message";
+
+    mensagemElemento.textContent =
+        mensagem;
+
+    answer.appendChild(
+        tituloElemento
+    );
+
+    answer.appendChild(
+        mensagemElemento
+    );
+}
+
+
 function limparDetalhesDeUso() {
     technicalModel.textContent = "—";
     technicalTotalTokens.textContent = "—";
@@ -105,7 +210,7 @@ function limparDetalhesDeUso() {
 
 
 function limparResposta() {
-    answer.textContent = "";
+    answer.replaceChildren();
     error.textContent = "";
 
     technicalStatus.textContent = "—";
@@ -113,6 +218,7 @@ function limparResposta() {
     technicalSql.textContent = "—";
 
     limparDetalhesDeUso();
+    limparEstadoResposta();
 
     esconder(answer);
     esconder(error);
@@ -270,46 +376,108 @@ function preencherDetalhesTecnicos(resultado) {
 
 
 function exibirResposta(resultado) {
-    preencherDetalhesTecnicos(resultado);
+    preencherDetalhesTecnicos(
+        resultado
+    );
 
-    if (resultado.answer) {
-        answer.textContent = resultado.answer;
+    aplicarEstadoResposta(
+        resultado.status
+    );
+
+    const mensagem =
+        resultado.answer ||
+        "O Ágora não retornou uma resposta.";
+
+    if (resultado.status === "NOT_ANSWERABLE") {
+        criarMensagemResposta(
+            "Informação não disponível nos dados",
+            mensagem
+        );
+
         mostrar(answer);
+
         return;
     }
 
-    error.textContent =
-        "O Ágora não retornou uma resposta.";
+    if (
+        resultado.status ===
+        "NEEDS_CLARIFICATION"
+    ) {
+        criarMensagemResposta(
+            "Preciso de mais detalhes",
+            mensagem
+        );
 
-    mostrar(error);
+        mostrar(answer);
+
+        return;
+    }
+
+    if (resultado.status === "NO_DATA") {
+        criarMensagemResposta(
+            "Nenhum resultado encontrado",
+            mensagem
+        );
+
+        mostrar(answer);
+
+        return;
+    }
+
+    criarMensagemResposta(
+        "Resposta",
+        mensagem
+    );
+
+    mostrar(answer);
 }
 
 
-function exibirErro(mensagem) {
+function exibirErro(
+    mensagem,
+    resultado = null
+) {
+    aplicarEstadoResposta(
+        resultado?.status || "ERROR"
+    );
+
     error.textContent = mensagem;
+
     mostrar(error);
 }
 
 
 function obterElementoTextoStatus() {
     let statusText =
-        systemStatus.querySelector(".status-text");
+        systemStatus.querySelector(
+            ".status-text"
+        );
 
     if (!statusText) {
-        statusText = document.createElement("span");
-        statusText.className = "status-text";
+        statusText =
+            document.createElement(
+                "span"
+            );
 
-        const textosSoltos = Array.from(
-            systemStatus.childNodes
-        ).filter(
-            (node) => node.nodeType === Node.TEXT_NODE
-        );
+        statusText.className =
+            "status-text";
+
+        const textosSoltos =
+            Array.from(
+                systemStatus.childNodes
+            ).filter(
+                (node) =>
+                    node.nodeType ===
+                    Node.TEXT_NODE
+            );
 
         textosSoltos.forEach(
             (node) => node.remove()
         );
 
-        systemStatus.appendChild(statusText);
+        systemStatus.appendChild(
+            statusText
+        );
     }
 
     return statusText;
@@ -323,8 +491,11 @@ function atualizarStatusSistema(
     const statusText =
         obterElementoTextoStatus();
 
-    systemStatus.dataset.state = estado;
-    statusText.textContent = texto;
+    systemStatus.dataset.state =
+        estado;
+
+    statusText.textContent =
+        texto;
 
     systemStatusDot.classList.remove(
         "status-dot-available",
@@ -337,6 +508,7 @@ function atualizarStatusSistema(
         systemStatusDot.classList.add(
             "status-dot-available"
         );
+
         return;
     }
 
@@ -344,6 +516,7 @@ function atualizarStatusSistema(
         systemStatusDot.classList.add(
             "status-dot-degraded"
         );
+
         return;
     }
 
@@ -351,6 +524,7 @@ function atualizarStatusSistema(
         systemStatusDot.classList.add(
             "status-dot-checking"
         );
+
         return;
     }
 
@@ -378,12 +552,14 @@ async function verificarSaude() {
         let resultado;
 
         try {
-            resultado = await response.json();
+            resultado =
+                await response.json();
         } catch {
             atualizarStatusSistema(
                 "unavailable",
                 "Sistema indisponível"
             );
+
             return;
         }
 
@@ -396,6 +572,7 @@ async function verificarSaude() {
                 "available",
                 "Sistema disponível"
             );
+
             return;
         }
 
@@ -407,6 +584,7 @@ async function verificarSaude() {
                 "degraded",
                 "Sistema degradado"
             );
+
             return;
         }
 
@@ -438,7 +616,8 @@ async function enviarPergunta(pergunta) {
             {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
+                    "Content-Type":
+                        "application/json",
                 },
                 body: JSON.stringify({
                     question: pergunta,
@@ -449,7 +628,8 @@ async function enviarPergunta(pergunta) {
         let resultado;
 
         try {
-            resultado = await response.json();
+            resultado =
+                await response.json();
         } catch {
             throw new Error(
                 "A API retornou uma resposta inválida."
@@ -463,13 +643,16 @@ async function enviarPergunta(pergunta) {
 
             exibirErro(
                 resultado.answer ||
-                "Não foi possível processar a pergunta."
+                "Não foi possível processar a pergunta.",
+                resultado
             );
 
             return;
         }
 
-        exibirResposta(resultado);
+        exibirResposta(
+            resultado
+        );
 
     } catch (erroRequisicao) {
         exibirErro(
@@ -502,7 +685,9 @@ form.addEventListener(
             return;
         }
 
-        await enviarPergunta(pergunta);
+        await enviarPergunta(
+            pergunta
+        );
     }
 );
 

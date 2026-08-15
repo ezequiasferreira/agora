@@ -1,4 +1,23 @@
 import json
+from decimal import Decimal
+
+
+def _json_default(valor):
+    """
+    Converte tipos retornados pelo banco que não são
+    serializáveis nativamente pelo módulo json.
+
+    Decimal é convertido para float para preservar
+    seu comportamento numérico no payload enviado ao LLM.
+    """
+
+    if isinstance(valor, Decimal):
+        return float(valor)
+
+    raise TypeError(
+        f"Objeto do tipo {type(valor).__name__} "
+        "não é serializável em JSON."
+    )
 
 
 class Respondedor:
@@ -94,6 +113,13 @@ class Respondedor:
             "rows": linhas,
         }
 
+        dados_json = json.dumps(
+            dados,
+            ensure_ascii=False,
+            indent=2,
+            default=_json_default,
+        )
+
         prompt = f"""
 Você é o módulo de resposta final do Ágora.
 
@@ -129,11 +155,7 @@ PERGUNTA ORIGINAL:
 
 DADOS RETORNADOS:
 
-{json.dumps(
-    dados,
-    ensure_ascii=False,
-    indent=2,
-)}
+{dados_json}
 """
 
         resposta_bruta = self.llm.gerar_sql(

@@ -11,6 +11,7 @@
     --success: #2f855a;
     --warning: #b7791f;
     --danger: #b42318;
+    --info: #315b8a;
     --shadow: 0 18px 50px rgba(22, 34, 51, 0.08);
     --radius-lg: 22px;
     --radius-md: 14px;
@@ -302,6 +303,38 @@ textarea:focus {
     border-radius: var(--radius-lg);
     background: var(--surface);
     box-shadow: var(--shadow);
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.response-state-answer {
+    border-color: rgba(47, 133, 90, 0.2);
+}
+
+.response-state-not-answerable {
+    border-color: rgba(49, 91, 138, 0.25);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(49, 91, 138, 0.025),
+            #ffffff 90px
+        );
+}
+
+.response-state-clarification {
+    border-color: rgba(183, 121, 31, 0.3);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(183, 121, 31, 0.035),
+            #ffffff 90px
+        );
+}
+
+.response-state-error {
+    border-color: rgba(180, 35, 24, 0.25);
 }
 
 .answer {
@@ -309,9 +342,40 @@ textarea:focus {
     line-height: 1.6;
 }
 
+.answer-state-title {
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.answer-state-message {
+    color: var(--text);
+    font-size: 19px;
+    line-height: 1.6;
+}
+
+.answer-normal .answer-state-title {
+    color: var(--success);
+}
+
+.answer-not-answerable .answer-state-title {
+    color: var(--info);
+}
+
+.answer-clarification .answer-state-title {
+    color: var(--warning);
+}
+
+.answer-not-answerable .answer-state-message,
+.answer-clarification .answer-state-message {
+    color: #344054;
+}
+
 .error {
     padding: 16px;
     border-radius: var(--radius-sm);
+    border: 1px solid rgba(180, 35, 24, 0.14);
     background: rgba(180, 35, 24, 0.06);
     color: var(--danger);
     line-height: 1.55;
@@ -350,6 +414,10 @@ textarea:focus {
     color: var(--muted);
     font-size: 14px;
     font-weight: 700;
+}
+
+.technical-details summary:hover {
+    color: var(--primary);
 }
 
 .technical-grid {
@@ -461,6 +529,10 @@ pre {
         padding: 22px;
     }
 
+    .response-card {
+        padding: 22px;
+    }
+
     .form-actions {
         align-items: stretch;
         flex-direction: column;
@@ -482,5 +554,9 @@ pre {
 
     .answer {
         font-size: 18px;
+    }
+
+    .answer-state-message {
+        font-size: 17px;
     }
 }

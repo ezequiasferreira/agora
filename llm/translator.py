@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 try:
     from .providers import LLMProvider
@@ -25,46 +25,114 @@ class TradutorNL2SQL:
             self.diretorio_base
         )
 
-        # Carrega catálogo e prompt uma única vez
+        # Perfil semântico ativo
+        self.semantic_profile = os.getenv(
+            "SEMANTIC_PROFILE",
+            "",
+        ).strip()
+
+        # Carrega catálogo, glossário e prompt uma única vez
         self.catalogo_str = self._carregar_catalogo(
             nome_catalogo
         )
-        self.system_prompt = self._carregar_system_prompt()
 
-    def _carregar_catalogo(self, nome_arquivo):
-        caminho_completo = os.path.join(
-            self.diretorio_raiz,
-            "catalog",
-            nome_arquivo,
+        self.glossario_str = self._carregar_glossario()
+
+        self.system_prompt = (
+            self._carregar_system_prompt()
         )
 
+    def _carregar_json(
+        self,
+        caminho_completo: str,
+        descricao: str,
+    ) -> str:
         try:
             with open(
                 caminho_completo,
                 "r",
                 encoding="utf-8",
             ) as arquivo:
-                catalogo = json.load(arquivo)
+                conteudo = json.load(
+                    arquivo
+                )
 
             return json.dumps(
-                catalogo,
+                conteudo,
                 indent=2,
                 ensure_ascii=False,
             )
 
         except FileNotFoundError:
             raise FileNotFoundError(
-                f"Catálogo não encontrado: {caminho_completo}"
+                f"{descricao} não encontrado: "
+                f"{caminho_completo}"
             )
 
         except json.JSONDecodeError as exc:
             raise ValueError(
-                f"Catálogo JSON inválido: {caminho_completo}"
+                f"{descricao} contém JSON inválido: "
+                f"{caminho_completo}"
             ) from exc
+
+    def _carregar_catalogo(
+        self,
+        nome_arquivo: str,
+    ) -> str:
+        caminho_completo = os.path.join(
+            self.diretorio_raiz,
+            "catalog",
+            nome_arquivo,
+        )
+
+        return self._carregar_json(
+            caminho_completo,
+            "Catálogo",
+        )
+
+    def _carregar_glossario(
+        self,
+    ) -> str:
+        """
+        Carrega o glossário institucional do perfil
+        semântico configurado.
+
+        O perfil não faz parte do núcleo do Ágora.
+        Cada organização ou domínio pode possuir seu
+        próprio glossário em semantic/profiles/.
+        """
+
+        if not self.semantic_profile:
+            return json.dumps(
+                {
+                    "profile": None,
+                    "concepts": [],
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+
+        caminho_completo = os.path.join(
+            self.diretorio_raiz,
+            "semantic",
+            "profiles",
+            self.semantic_profile,
+            "glossary.json",
+        )
+
+        return self._carregar_json(
+            caminho_completo,
+            (
+                "Glossário do perfil semântico "
+                f"'{self.semantic_profile}'"
+            ),
+        )
 
     def _carregar_system_prompt(
         self,
-        caminho_relativo="prompts/system_prompt.md",
+        caminho_relativo=(
+            "prompts/system_prompt.md"
+        ),
     ):
         caminho_completo = os.path.join(
             self.diretorio_base,
@@ -81,12 +149,16 @@ class TradutorNL2SQL:
 
         except FileNotFoundError:
             raise FileNotFoundError(
-                f"Arquivo de regras não encontrado: "
+                "Arquivo de regras não encontrado: "
                 f"{caminho_completo}"
             )
 
-    def processar_pergunta(self, pergunta: str) -> dict:
-        prompt_completo = f"""{self.system_prompt}
+    def processar_pergunta(
+        self,
+        pergunta: str,
+    ) -> dict:
+        prompt_completo = f"""
+{self.system_prompt}
 
 FORMATO DE SAÍDA OBRIGATÓRIO (JSON):
 {{
@@ -95,15 +167,20 @@ FORMATO DE SAÍDA OBRIGATÓRIO (JSON):
   "message": "Explicação ou null"
 }}
 
-CATÁLOGO DE DADOS DISPONÍVEIS:
+CATÁLOGO AUTOMÁTICO DE DADOS:
 {self.catalogo_str}
+
+GLOSSÁRIO INSTITUCIONAL DO PERFIL ATIVO:
+{self.glossario_str}
 
 PERGUNTA DO USUÁRIO:
 {pergunta}
 """
 
-        resposta_bruta = self.llm.gerar_sql(
-            prompt_completo
+        resposta_bruta = (
+            self.llm.gerar_sql(
+                prompt_completo
+            )
         )
 
         if not resposta_bruta:
@@ -111,8 +188,8 @@ PERGUNTA DO USUÁRIO:
                 "status": "PROVIDER_ERROR",
                 "sql": None,
                 "message": (
-                    "O provedor de Inteligência Artificial "
-                    "não retornou conteúdo."
+                    "O provedor de Inteligência "
+                    "Artificial não retornou conteúdo."
                 ),
             }
 
@@ -124,23 +201,30 @@ PERGUNTA DO USUÁRIO:
         )
 
         try:
-            resultado = json.loads(json_limpo)
+            resultado = json.loads(
+                json_limpo
+            )
 
         except json.JSONDecodeError:
             return {
                 "status": "FORMAT_ERROR",
                 "sql": None,
                 "message": (
-                    "A resposta do provedor de Inteligência "
-                    "Artificial não possui formato JSON válido."
+                    "A resposta do provedor de "
+                    "Inteligência Artificial não "
+                    "possui formato JSON válido."
                 ),
             }
 
-        # Erros técnicos produzidos pelo próprio provider
-        if resultado.get("status") == "PROVIDER_ERROR":
+        if (
+            resultado.get("status")
+            == "PROVIDER_ERROR"
+        ):
             return resultado
 
-        status = resultado.get("status")
+        status = resultado.get(
+            "status"
+        )
 
         estados_validos = {
             "QUERY",
@@ -153,19 +237,22 @@ PERGUNTA DO USUÁRIO:
                 "status": "FORMAT_ERROR",
                 "sql": None,
                 "message": (
-                    "A resposta da LLM contém um status "
-                    "não reconhecido pelo Ágora."
+                    "A resposta da LLM contém "
+                    "um status não reconhecido "
+                    "pelo Ágora."
                 ),
             }
 
-        # QUERY obrigatoriamente precisa possuir SQL
-        if status == "QUERY" and not resultado.get("sql"):
+        if (
+            status == "QUERY"
+            and not resultado.get("sql")
+        ):
             return {
                 "status": "FORMAT_ERROR",
                 "sql": None,
                 "message": (
-                    "A LLM retornou QUERY sem uma "
-                    "instrução SQL."
+                    "A LLM retornou QUERY sem "
+                    "uma instrução SQL."
                 ),
             }
 

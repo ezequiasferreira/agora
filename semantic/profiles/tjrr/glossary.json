@@ -1,0 +1,129 @@
+{
+  "version": "1.0",
+  "profile": "tjrr",
+  "description": "Glossário institucional do perfil TJRR para interpretação semântica no Ágora.",
+  "concepts": [
+    {
+      "id": "servidor",
+      "business_name": "Servidor",
+      "description": "Pessoa vinculada à organização e representada nos dados funcionais ou remuneratórios.",
+      "synonyms": [
+        "funcionário",
+        "servidor público"
+      ],
+      "targets": [
+        {
+          "type": "table",
+          "table": "servidores_tlp"
+        },
+        {
+          "type": "table",
+          "table": "remuneracoes"
+        }
+      ]
+    },
+    {
+      "id": "remuneracao_liquida",
+      "business_name": "Remuneração líquida",
+      "description": "Valor líquido resultante da remuneração após os descontos representados nos dados.",
+      "synonyms": [
+        "salário líquido",
+        "rendimento líquido",
+        "valor líquido",
+        "líquido recebido",
+        "quanto recebeu líquido"
+      ],
+      "targets": [
+        {
+          "type": "column",
+          "table": "remuneracoes",
+          "column": "rendimento_liquido"
+        }
+      ],
+      "display": {
+        "type": "currency",
+        "currency": "BRL",
+        "locale": "pt-BR",
+        "decimal_places": 2
+      }
+    },
+    {
+      "id": "remuneracao",
+      "business_name": "Remuneração",
+      "description": "Conceito remuneratório genérico. Quando a pergunta não indicar qual componente remuneratório deve ser utilizado e existirem alternativas relevantes, o sistema deve solicitar esclarecimento.",
+      "synonyms": [
+        "salário",
+        "vencimento",
+        "valor recebido"
+      ],
+      "ambiguity": {
+        "requires_clarification_when_unspecified": true,
+        "message": "Você deseja considerar remuneração líquida ou outro componente remuneratório disponível nos dados?"
+      },
+      "related_concepts": [
+        "remuneracao_liquida"
+      ]
+    },
+    {
+      "id": "lotacao",
+      "business_name": "Lotação",
+      "description": "Unidade organizacional à qual o servidor está associado nos dados funcionais.",
+      "synonyms": [
+        "unidade",
+        "setor",
+        "local de lotação",
+        "unidade organizacional"
+      ],
+      "targets": [
+        {
+          "type": "table",
+          "table": "unidades_tlp"
+        }
+      ]
+    },
+    {
+      "id": "primeiro_grau",
+      "business_name": "Primeiro grau",
+      "description": "Referência a unidades ou servidores associados ao primeiro grau de jurisdição. O significado concreto deve utilizar somente valores existentes nos domínios descobertos pelo catálogo.",
+      "synonyms": [
+        "1º grau",
+        "primeira instância",
+        "primeiro grau de jurisdição"
+      ],
+      "targets": [
+        {
+          "type": "column",
+          "table": "unidades_tlp",
+          "column": "grau"
+        },
+        {
+          "type": "column",
+          "table": "servidores_tlp",
+          "column": "grau_jurisdicao"
+        }
+      ]
+    },
+    {
+      "id": "segundo_grau",
+      "business_name": "Segundo grau",
+      "description": "Referência a unidades ou servidores associados ao segundo grau de jurisdição. O significado concreto deve utilizar somente valores existentes nos domínios descobertos pelo catálogo.",
+      "synonyms": [
+        "2º grau",
+        "segunda instância",
+        "segundo grau de jurisdição"
+      ],
+      "targets": [
+        {
+          "type": "column",
+          "table": "unidades_tlp",
+          "column": "grau"
+        },
+        {
+          "type": "column",
+          "table": "servidores_tlp",
+          "column": "grau_jurisdicao"
+        }
+      ]
+    }
+  ]
+}

@@ -9,6 +9,7 @@
     --primary-dark: #142744;
     --accent: #d9b25f;
     --success: #2f855a;
+    --warning: #b7791f;
     --danger: #b42318;
     --shadow: 0 18px 50px rgba(22, 34, 51, 0.08);
     --radius-lg: 22px;
@@ -108,14 +109,75 @@ button {
     background: rgba(255, 255, 255, 0.8);
     color: var(--muted);
     font-size: 14px;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
 .status-dot {
     width: 9px;
     height: 9px;
     border-radius: 999px;
+    background: #98a2b3;
+    box-shadow: 0 0 0 4px rgba(152, 162, 179, 0.12);
+    transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.status[data-state="available"] {
+    border-color: rgba(47, 133, 90, 0.25);
+    background: rgba(47, 133, 90, 0.05);
+    color: var(--success);
+}
+
+.status[data-state="degraded"] {
+    border-color: rgba(183, 121, 31, 0.28);
+    background: rgba(183, 121, 31, 0.06);
+    color: var(--warning);
+}
+
+.status[data-state="unavailable"] {
+    border-color: rgba(180, 35, 24, 0.25);
+    background: rgba(180, 35, 24, 0.05);
+    color: var(--danger);
+}
+
+.status[data-state="checking"] {
+    color: var(--muted);
+}
+
+.status-dot-available {
     background: var(--success);
     box-shadow: 0 0 0 4px rgba(47, 133, 90, 0.1);
+}
+
+.status-dot-degraded {
+    background: var(--warning);
+    box-shadow: 0 0 0 4px rgba(183, 121, 31, 0.1);
+}
+
+.status-dot-unavailable {
+    background: var(--danger);
+    box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.1);
+}
+
+.status-dot-checking {
+    background: #98a2b3;
+    box-shadow: 0 0 0 4px rgba(152, 162, 179, 0.12);
+    animation: pulse-status 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-status {
+    0%,
+    100% {
+        opacity: 0.45;
+    }
+
+    50% {
+        opacity: 1;
+    }
 }
 
 .panel {

@@ -29,6 +29,34 @@ class AskRequest(BaseModel):
     )
 
 
+class LLMUsageStep(BaseModel):
+    model: str | None = None
+    input_tokens: int = 0
+    cached_input_tokens: int = 0
+    output_tokens: int = 0
+    reasoning_tokens: int = 0
+    total_tokens: int = 0
+
+
+class LLMCost(BaseModel):
+    currency: str = "USD"
+    input_cost_usd: float = 0
+    cached_input_cost_usd: float = 0
+    output_cost_usd: float = 0
+    total_cost_usd: float = 0
+
+
+class LLMUsage(BaseModel):
+    model: str | None = None
+    input_tokens: int = 0
+    cached_input_tokens: int = 0
+    output_tokens: int = 0
+    reasoning_tokens: int = 0
+    total_tokens: int = 0
+    steps: dict[str, LLMUsageStep] | None = None
+    cost: LLMCost | None = None
+
+
 class AskResponse(BaseModel):
     success: bool
     status: str
@@ -38,3 +66,4 @@ class AskResponse(BaseModel):
     rows: list[list[Any]] | None = None
     row_count: int | None = None
     execution_time_ms: int | None = None
+    usage: LLMUsage | None = None

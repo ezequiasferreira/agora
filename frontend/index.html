@@ -34,7 +34,9 @@
 
             <div class="status">
                 <span class="status-dot"></span>
-                Sistema disponível
+                <span class="status-text">
+                    Verificando sistema...
+                </span>
             </div>
         </section>
 
@@ -148,6 +150,66 @@
                                 —
                             </code>
                         </div>
+
+                        <div>
+                            <span class="technical-title">
+                                Modelo de IA
+                            </span>
+
+                            <code id="technical-model">
+                                —
+                            </code>
+                        </div>
+
+                        <div>
+                            <span class="technical-title">
+                                Tokens totais
+                            </span>
+
+                            <code id="technical-total-tokens">
+                                —
+                            </code>
+                        </div>
+
+                        <div>
+                            <span class="technical-title">
+                                Tokens de entrada
+                            </span>
+
+                            <code id="technical-input-tokens">
+                                —
+                            </code>
+                        </div>
+
+                        <div>
+                            <span class="technical-title">
+                                Tokens em cache
+                            </span>
+
+                            <code id="technical-cached-tokens">
+                                —
+                            </code>
+                        </div>
+
+                        <div>
+                            <span class="technical-title">
+                                Tokens de saída
+                            </span>
+
+                            <code id="technical-output-tokens">
+                                —
+                            </code>
+                        </div>
+
+                        <div>
+                            <span class="technical-title">
+                                Custo estimado
+                            </span>
+
+                            <code id="technical-cost">
+                                —
+                            </code>
+                        </div>
                     </div>
 
                     <div class="technical-block">
@@ -156,6 +218,17 @@
                         </span>
 
                         <pre id="technical-sql">—</pre>
+                    </div>
+
+                    <div
+                        id="technical-usage-breakdown"
+                        class="technical-block hidden"
+                    >
+                        <span class="technical-title">
+                            Consumo por etapa
+                        </span>
+
+                        <pre id="technical-usage">—</pre>
                     </div>
                 </details>
             </div>

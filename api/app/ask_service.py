@@ -32,8 +32,6 @@ DIRETORIO_LLM = os.path.join(
     "llm",
 )
 
-
-# Permite reutilizar os módulos existentes em llm/
 if DIRETORIO_LLM not in sys.path:
     sys.path.insert(
         0,
@@ -89,6 +87,32 @@ GEMINI_MODEL = os.getenv(
 
 
 # ============================================================
+# CONFIGURAÇÃO DE CUSTOS
+# ============================================================
+
+OPENAI_INPUT_COST_PER_1M = float(
+    os.getenv(
+        "OPENAI_INPUT_COST_PER_1M",
+        "0",
+    )
+)
+
+OPENAI_CACHED_INPUT_COST_PER_1M = float(
+    os.getenv(
+        "OPENAI_CACHED_INPUT_COST_PER_1M",
+        "0",
+    )
+)
+
+OPENAI_OUTPUT_COST_PER_1M = float(
+    os.getenv(
+        "OPENAI_OUTPUT_COST_PER_1M",
+        "0",
+    )
+)
+
+
+# ============================================================
 # INSTÂNCIAS REUTILIZÁVEIS
 # ============================================================
 
@@ -98,10 +122,6 @@ _respondedor = None
 
 
 def _criar_provedor():
-    """
-    Cria o provedor configurado para o MVP.
-    """
-
     if LLM_PROVIDER == "openai":
         if not OPENAI_API_KEY:
             raise RuntimeError(
@@ -133,11 +153,6 @@ def _criar_provedor():
 
 
 def _obter_componentes():
-    """
-    Inicializa os componentes apenas na primeira requisição
-    e reutiliza as instâncias nas próximas perguntas.
-    """
-
     global _provedor
     global _tradutor
     global _respondedor
@@ -156,9 +171,195 @@ def _obter_componentes():
         )
 
     return (
+        _provedor,
         _tradutor,
         _respondedor,
     )
+
+
+# ============================================================
+# USO DE TOKENS
+# ============================================================
+
+def _uso_vazio() -> dict:
+    return {
+        "model": None,
+        "input_tokens": 0,
+        "cached_input_tokens": 0,
+        "output_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 0,
+    }
+
+
+def _normalizar_uso(
+    uso: dict | None,
+) -> dict:
+    if not uso:
+        return _uso_vazio()
+
+    return {
+        "model": uso.get("model"),
+        "input_tokens": uso.get(
+            "input_tokens",
+            0,
+        ),
+        "cached_input_tokens": uso.get(
+            "cached_input_tokens",
+            0,
+        ),
+        "output_tokens": uso.get(
+            "output_tokens",
+            0,
+        ),
+        "reasoning_tokens": uso.get(
+            "reasoning_tokens",
+            0,
+        ),
+        "total_tokens": uso.get(
+            "total_tokens",
+            0,
+        ),
+    }
+
+
+def _calcular_custo_openai(
+    uso: dict,
+) -> dict:
+    """
+    Calcula o custo estimado da chamada em dólares.
+
+    Tokens de entrada em cache são descontados
+    do total de entrada normal para evitar
+    cobrança duplicada.
+    """
+
+    input_tokens = uso.get(
+        "input_tokens",
+        0,
+    )
+
+    cached_input_tokens = uso.get(
+        "cached_input_tokens",
+        0,
+    )
+
+    output_tokens = uso.get(
+        "output_tokens",
+        0,
+    )
+
+    input_tokens_nao_cacheados = max(
+        input_tokens - cached_input_tokens,
+        0,
+    )
+
+    custo_input = (
+        input_tokens_nao_cacheados
+        / 1_000_000
+        * OPENAI_INPUT_COST_PER_1M
+    )
+
+    custo_input_cacheado = (
+        cached_input_tokens
+        / 1_000_000
+        * OPENAI_CACHED_INPUT_COST_PER_1M
+    )
+
+    custo_output = (
+        output_tokens
+        / 1_000_000
+        * OPENAI_OUTPUT_COST_PER_1M
+    )
+
+    custo_total = (
+        custo_input
+        + custo_input_cacheado
+        + custo_output
+    )
+
+    return {
+        "currency": "USD",
+        "input_cost_usd": round(
+            custo_input,
+            8,
+        ),
+        "cached_input_cost_usd": round(
+            custo_input_cacheado,
+            8,
+        ),
+        "output_cost_usd": round(
+            custo_output,
+            8,
+        ),
+        "total_cost_usd": round(
+            custo_total,
+            8,
+        ),
+    }
+
+
+def _calcular_custo(
+    uso: dict,
+) -> dict | None:
+    if LLM_PROVIDER == "openai":
+        return _calcular_custo_openai(
+            uso
+        )
+
+    return None
+
+
+def _somar_usos(
+    uso_sql: dict | None,
+    uso_resposta: dict | None,
+) -> dict:
+    uso_sql = _normalizar_uso(
+        uso_sql
+    )
+
+    uso_resposta = _normalizar_uso(
+        uso_resposta
+    )
+
+    modelo = (
+        uso_resposta.get("model")
+        or uso_sql.get("model")
+    )
+
+    uso_total = {
+        "model": modelo,
+        "input_tokens": (
+            uso_sql["input_tokens"]
+            + uso_resposta["input_tokens"]
+        ),
+        "cached_input_tokens": (
+            uso_sql["cached_input_tokens"]
+            + uso_resposta["cached_input_tokens"]
+        ),
+        "output_tokens": (
+            uso_sql["output_tokens"]
+            + uso_resposta["output_tokens"]
+        ),
+        "reasoning_tokens": (
+            uso_sql["reasoning_tokens"]
+            + uso_resposta["reasoning_tokens"]
+        ),
+        "total_tokens": (
+            uso_sql["total_tokens"]
+            + uso_resposta["total_tokens"]
+        ),
+        "steps": {
+            "sql_generation": uso_sql,
+            "final_answer": uso_resposta,
+        },
+    }
+
+    uso_total["cost"] = _calcular_custo(
+        uso_total
+    )
+
+    return uso_total
 
 
 # ============================================================
@@ -169,20 +370,10 @@ def processar_pergunta(
     pergunta: str,
 ) -> dict:
     """
-    Executa o fluxo completo do Ágora:
-
-    pergunta
-        ↓
-    linguagem natural → SQL
-        ↓
-    validação segura
-        ↓
-    PostgreSQL
-        ↓
-    resposta natural
+    Executa o fluxo completo do Ágora.
     """
 
-    tradutor, respondedor = (
+    provedor, tradutor, respondedor = (
         _obter_componentes()
     )
 
@@ -195,6 +386,8 @@ def processar_pergunta(
             pergunta
         )
     )
+
+    uso_sql = provedor.obter_ultimo_uso()
 
     status_llm = resultado_llm.get(
         "status"
@@ -211,6 +404,10 @@ def processar_pergunta(
             "answer": resultado_llm.get(
                 "message"
             ),
+            "usage": _somar_usos(
+                uso_sql,
+                None,
+            ),
         }
 
     # --------------------------------------------------------
@@ -223,6 +420,10 @@ def processar_pergunta(
             "status": "NEEDS_CLARIFICATION",
             "answer": resultado_llm.get(
                 "message"
+            ),
+            "usage": _somar_usos(
+                uso_sql,
+                None,
             ),
         }
 
@@ -240,6 +441,10 @@ def processar_pergunta(
             "answer": resultado_llm.get(
                 "message"
             ),
+            "usage": _somar_usos(
+                uso_sql,
+                None,
+            ),
         }
 
     if status_llm != "QUERY":
@@ -249,6 +454,10 @@ def processar_pergunta(
             "answer": (
                 "O Ágora recebeu um estado "
                 "não reconhecido do módulo de IA."
+            ),
+            "usage": _somar_usos(
+                uso_sql,
+                None,
             ),
         }
 
@@ -263,6 +472,10 @@ def processar_pergunta(
             "answer": (
                 "O módulo de IA não gerou "
                 "uma consulta válida."
+            ),
+            "usage": _somar_usos(
+                uso_sql,
+                None,
             ),
         }
 
@@ -281,6 +494,10 @@ def processar_pergunta(
             "status": erro.error_type,
             "answer": erro.message,
             "generated_sql": sql_gerado,
+            "usage": _somar_usos(
+                uso_sql,
+                None,
+            ),
         }
 
     # --------------------------------------------------------
@@ -309,6 +526,10 @@ def processar_pergunta(
                     "máximo de execução."
                 ),
                 "generated_sql": sql_validado,
+                "usage": _somar_usos(
+                    uso_sql,
+                    None,
+                ),
             }
 
         return {
@@ -319,6 +540,10 @@ def processar_pergunta(
                 "a consulta nos dados."
             ),
             "generated_sql": sql_validado,
+            "usage": _somar_usos(
+                uso_sql,
+                None,
+            ),
         }
 
     except Exception:
@@ -330,6 +555,10 @@ def processar_pergunta(
                 "processar a consulta."
             ),
             "generated_sql": sql_validado,
+            "usage": _somar_usos(
+                uso_sql,
+                None,
+            ),
         }
 
     # --------------------------------------------------------
@@ -356,6 +585,15 @@ def processar_pergunta(
         )
     )
 
+    uso_resposta = (
+        provedor.obter_ultimo_uso()
+    )
+
+    uso_total = _somar_usos(
+        uso_sql,
+        uso_resposta,
+    )
+
     status_final = resposta_final.get(
         "status"
     )
@@ -377,6 +615,7 @@ def processar_pergunta(
             "rows": linhas,
             "row_count": len(linhas),
             "execution_time_ms": duracao,
+            "usage": uso_total,
         }
 
     # --------------------------------------------------------
@@ -392,4 +631,5 @@ def processar_pergunta(
         "rows": linhas,
         "row_count": len(linhas),
         "execution_time_ms": duracao,
+        "usage": uso_total,
     }

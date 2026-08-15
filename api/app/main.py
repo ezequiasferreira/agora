@@ -269,6 +269,9 @@ def perguntar(
                 execution_time_ms=resultado.get(
                     "execution_time_ms"
                 ),
+                usage=resultado.get(
+                    "usage"
+                ),
             ).model_dump(),
         )
 
@@ -295,5 +298,8 @@ def perguntar(
         ),
         execution_time_ms=resultado.get(
             "execution_time_ms"
+        ),
+        usage=resultado.get(
+            "usage"
         ),
     )

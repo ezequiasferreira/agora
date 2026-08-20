@@ -3,7 +3,259 @@
     "schema": "agora",
     "tables": [
         {
+            "name": "fato_remuneracao_rubrica",
+            "object_type": "table",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "nullable": false
+                },
+                {
+                    "name": "matricula",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "referencia",
+                    "type": "date",
+                    "nullable": false,
+                    "distinct_values": [
+                        "2025-01-01",
+                        "2025-02-01",
+                        "2025-03-01",
+                        "2025-04-01",
+                        "2025-05-01",
+                        "2025-06-01"
+                    ]
+                },
+                {
+                    "name": "codigo_rubrica",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "descricao_api",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "grupo_remuneratorio",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "vldescontosdiversos",
+                        "vldiarias",
+                        "vlfuncaoconfianca",
+                        "vlgratificacoes",
+                        "vlimpostorenda",
+                        "vlindenizacoes",
+                        "vlprevidenciapublica",
+                        "vlremuneracaoorgaoorigem",
+                        "vlremuneracaoparadigma",
+                        "vlretencaotetoconstitucional",
+                        "vlvantagenseventuais",
+                        "vlvantagenspessoais"
+                    ]
+                },
+                {
+                    "name": "sinal",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "+",
+                        "-"
+                    ]
+                },
+                {
+                    "name": "valor",
+                    "type": "numeric",
+                    "nullable": false
+                },
+                {
+                    "name": "nome_servidor",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "codigo_cargo",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "cargo",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "codigo_setor",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "setor",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "codigo_orgao",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "100",
+                        "101",
+                        "102",
+                        "103",
+                        "105",
+                        "106",
+                        "107",
+                        "108",
+                        "109",
+                        "110",
+                        "111"
+                    ]
+                },
+                {
+                    "name": "orgao",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "COMARCA DE BOA VISTA",
+                        "CORREGEDORIA GERAL DE JUSTIÇA",
+                        "ESCOLA JUDICIAL DE RORAIMA",
+                        "PRESIDÊNCIA",
+                        "SECRETARIA DE GESTÃO DE PESSOAS",
+                        "SECRETARIA DE INFRAESTRUTURA E LOGISTICA",
+                        "SECRETARIA DE ORÇAMENTO E FINANÇAS",
+                        "SECRETARIA DE TECNOLOGIA DA INFORMACAO",
+                        "SECRETARIA GERAL",
+                        "TRIBUNAL PLENO",
+                        "VICE-PRESIDÊNCIA"
+                    ]
+                },
+                {
+                    "name": "codigo_vinculo",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "vinculo",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "padrao",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "--- --- ---",
+                        "MAG - FOLHA INATIVOS",
+                        "PENS - MG - SUBSIDIO",
+                        "TJ/DCA",
+                        "TJ/MAG",
+                        "TJ/MAG-",
+                        "TJ/NF-1",
+                        "TJ/NM-1",
+                        "TJ/NS-1"
+                    ]
+                },
+                {
+                    "name": "data_admissao",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "pensionista",
+                    "type": "boolean",
+                    "nullable": true
+                },
+                {
+                    "name": "inativo",
+                    "type": "boolean",
+                    "nullable": true
+                },
+                {
+                    "name": "fonte",
+                    "type": "text",
+                    "nullable": false,
+                    "distinct_values": [
+                        "TJRR_PORTAL_REMUNERACOES"
+                    ]
+                },
+                {
+                    "name": "endpoint_origem",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "data_carga",
+                    "type": "timestamp without time zone",
+                    "nullable": false
+                },
+                {
+                    "name": "sequencia_ocorrencia",
+                    "type": "integer",
+                    "nullable": false
+                }
+            ],
+            "primary_key": [
+                "id"
+            ],
+            "foreign_keys": []
+        },
+        {
+            "name": "mapa_lotacoes",
+            "object_type": "table",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "nullable": false
+                },
+                {
+                    "name": "lotacao_origem",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "lotacao_canonica",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "tipo_correspondencia",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "similaridade",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "revisado",
+                    "type": "boolean",
+                    "nullable": false
+                },
+                {
+                    "name": "observacao",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "data_carga",
+                    "type": "timestamp without time zone",
+                    "nullable": false
+                }
+            ],
+            "primary_key": [
+                "id"
+            ],
+            "foreign_keys": []
+        },
+        {
             "name": "remuneracoes",
+            "object_type": "table",
             "columns": [
                 {
                     "name": "id",
@@ -128,6 +380,7 @@
         },
         {
             "name": "rubricas_folha",
+            "object_type": "table",
             "columns": [
                 {
                     "name": "id",
@@ -166,7 +419,92 @@
             "foreign_keys": []
         },
         {
+            "name": "semantic_entity_map",
+            "object_type": "table",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "nullable": false
+                },
+                {
+                    "name": "profile",
+                    "type": "text",
+                    "nullable": false,
+                    "distinct_values": [
+                        "tjrr"
+                    ]
+                },
+                {
+                    "name": "entity_type",
+                    "type": "text",
+                    "nullable": false,
+                    "distinct_values": [
+                        "lotacao"
+                    ]
+                },
+                {
+                    "name": "source_value",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "canonical_value",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "match_type",
+                    "type": "text",
+                    "nullable": false,
+                    "distinct_values": [
+                        "GRAPHIC_NORMALIZATION",
+                        "MANUAL_REVIEW",
+                        "PREFIX_COMPLETION"
+                    ]
+                },
+                {
+                    "name": "confidence",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "reviewed",
+                    "type": "boolean",
+                    "nullable": false
+                },
+                {
+                    "name": "valid_from",
+                    "type": "date",
+                    "nullable": true,
+                    "distinct_values": [
+                        "2025-01-01"
+                    ]
+                },
+                {
+                    "name": "valid_to",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "metadata",
+                    "type": "jsonb",
+                    "nullable": true
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp without time zone",
+                    "nullable": false
+                }
+            ],
+            "primary_key": [
+                "id"
+            ],
+            "foreign_keys": []
+        },
+        {
             "name": "servidores_tlp",
+            "object_type": "table",
             "columns": [
                 {
                     "name": "id",
@@ -353,6 +691,7 @@
         },
         {
             "name": "unidades_tlp",
+            "object_type": "table",
             "columns": [
                 {
                     "name": "id",
@@ -485,6 +824,7 @@
         },
         {
             "name": "unidades_tlp_cargos_funcoes",
+            "object_type": "table",
             "columns": [
                 {
                     "name": "id",
@@ -552,6 +892,394 @@
                     "references_column": "id"
                 }
             ]
+        },
+        {
+            "name": "vw_remuneracao_rubrica_semantica",
+            "object_type": "view",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "nullable": true
+                },
+                {
+                    "name": "matricula",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "referencia",
+                    "type": "date",
+                    "nullable": true,
+                    "distinct_values": [
+                        "2025-01-01",
+                        "2025-02-01",
+                        "2025-03-01",
+                        "2025-04-01",
+                        "2025-05-01",
+                        "2025-06-01"
+                    ]
+                },
+                {
+                    "name": "ano",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "mes",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "codigo_rubrica",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "sequencia_ocorrencia",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "descricao_api",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "grupo_remuneratorio",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "vldescontosdiversos",
+                        "vldiarias",
+                        "vlfuncaoconfianca",
+                        "vlgratificacoes",
+                        "vlimpostorenda",
+                        "vlindenizacoes",
+                        "vlprevidenciapublica",
+                        "vlremuneracaoorgaoorigem",
+                        "vlremuneracaoparadigma",
+                        "vlretencaotetoconstitucional",
+                        "vlvantagenseventuais",
+                        "vlvantagenspessoais"
+                    ]
+                },
+                {
+                    "name": "sinal",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "+",
+                        "-"
+                    ]
+                },
+                {
+                    "name": "valor",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "nome_servidor",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "codigo_cargo",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "cargo_folha",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "codigo_setor",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "setor_folha",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "codigo_orgao",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "100",
+                        "101",
+                        "102",
+                        "103",
+                        "105",
+                        "106",
+                        "107",
+                        "108",
+                        "109",
+                        "110",
+                        "111"
+                    ]
+                },
+                {
+                    "name": "orgao",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "COMARCA DE BOA VISTA",
+                        "CORREGEDORIA GERAL DE JUSTIÇA",
+                        "ESCOLA JUDICIAL DE RORAIMA",
+                        "PRESIDÊNCIA",
+                        "SECRETARIA DE GESTÃO DE PESSOAS",
+                        "SECRETARIA DE INFRAESTRUTURA E LOGISTICA",
+                        "SECRETARIA DE ORÇAMENTO E FINANÇAS",
+                        "SECRETARIA DE TECNOLOGIA DA INFORMACAO",
+                        "SECRETARIA GERAL",
+                        "TRIBUNAL PLENO",
+                        "VICE-PRESIDÊNCIA"
+                    ]
+                },
+                {
+                    "name": "codigo_vinculo",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "vinculo",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "padrao",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "--- --- ---",
+                        "MAG - FOLHA INATIVOS",
+                        "PENS - MG - SUBSIDIO",
+                        "TJ/DCA",
+                        "TJ/MAG",
+                        "TJ/MAG-",
+                        "TJ/NF-1",
+                        "TJ/NM-1",
+                        "TJ/NS-1"
+                    ]
+                },
+                {
+                    "name": "remuneracao_id",
+                    "type": "bigint",
+                    "nullable": true
+                },
+                {
+                    "name": "cargo_remuneracao",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "lotacao_original",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "lotacao_canonica",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "rendimento_liquido",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "total_creditos",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "total_debitos",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "indenizacoes",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "status_relacionamento",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "MATCH_AMBIGUO",
+                        "MATCH_UNICO",
+                        "SEM_MATCH"
+                    ]
+                },
+                {
+                    "name": "qtd_matches",
+                    "type": "bigint",
+                    "nullable": true
+                },
+                {
+                    "name": "natureza_financeira",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "CREDITO",
+                        "DEBITO"
+                    ]
+                }
+            ],
+            "primary_key": [],
+            "foreign_keys": []
+        },
+        {
+            "name": "vw_remuneracoes_semanticas",
+            "object_type": "view",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "nullable": true
+                },
+                {
+                    "name": "ano",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "mes",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "nome",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "cargo",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "lotacao_original",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "lotacao_canonica",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "lotacao_canonicalizada",
+                    "type": "boolean",
+                    "nullable": true
+                },
+                {
+                    "name": "lotacao_match_type",
+                    "type": "text",
+                    "nullable": true,
+                    "distinct_values": [
+                        "GRAPHIC_NORMALIZATION",
+                        "MANUAL_REVIEW",
+                        "PREFIX_COMPLETION"
+                    ]
+                },
+                {
+                    "name": "lotacao_confidence",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "remuneracao_paradigma",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "vantagens_pessoais",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "subsidio_funcao_cargo_comissao",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "indenizacoes",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "vantagens_eventuais",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "gratificacoes",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "total_creditos",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "previdencia_publica",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "imposto_renda",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "descontos_diversos",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "retencao_teto",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "total_debitos",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "rendimento_liquido",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "remuneracao_orgao_origem",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "diarias",
+                    "type": "numeric",
+                    "nullable": true
+                },
+                {
+                    "name": "arquivo_origem",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "data_carga",
+                    "type": "timestamp without time zone",
+                    "nullable": true
+                }
+            ],
+            "primary_key": [],
+            "foreign_keys": []
         }
     ]
 }

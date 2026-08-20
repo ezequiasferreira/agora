@@ -1,0 +1,172 @@
+{
+  "benchmark": {
+    "id": "bruno_fire_test",
+    "name": "Teste de Fogo - Prof. Bruno Cesar",
+    "version": "1.0",
+    "description": "Benchmark de perguntas complexas para avaliar interpretação semântica, capacidade analítica, geração de SQL complexo, reconhecimento de limitações dos dados e governança do Ágora.",
+    "expected_statuses": [
+      "ANSWER",
+      "PARTIAL",
+      "NEEDS_CLARIFICATION",
+      "NOT_ANSWERABLE"
+    ]
+  },
+  "cases": [
+    {
+      "id": "BRUNO_01",
+      "title": "Anomalia remuneratória por unidade",
+      "question": "Liste servidores cujo rendimento líquido em junho de 2025 supera em mais de 2 desvios-padrão a média de sua unidade de lotação, mostrando também a decomposição por rubrica.",
+      "expected_status": "PARTIAL",
+      "capabilities": [
+        "CTE",
+        "AVG",
+        "STDDEV",
+        "outlier_detection",
+        "join_semantico",
+        "resultado_com_nomes",
+        "resultado_com_unidades"
+      ],
+      "answerable_now": [
+        "cálculo estatístico de média por grupo, se houver relacionamento seguro entre remuneração e unidade",
+        "desvio-padrão",
+        "detecção de outliers",
+        "nome de pessoas quando disponível nas relações existentes",
+        "nome da unidade quando disponível nas relações existentes"
+      ],
+      "missing_data": [
+        "detalhamento da remuneração por rubrica, servidor e mês"
+      ],
+      "required_for_full_answer": [
+        "uma relação equivalente a servidor -> mês -> rubrica -> valor"
+      ],
+      "notes": "O Ágora não deve inventar decomposição por rubrica apenas porque existe um catálogo de rubricas."
+    },
+    {
+      "id": "BRUNO_02",
+      "title": "Cargo em comissão e função de confiança",
+      "question": "Identifique servidores que ocupam simultaneamente Cargo em Comissão e Função de Confiança no mesmo mês, quantificando o impacto financeiro total da acumulação.",
+      "expected_status": "PARTIAL",
+      "capabilities": [
+        "multiple_ctes",
+        "conditional_aggregation",
+        "cross_reference",
+        "resultado_com_nomes",
+        "resultado_com_unidades"
+      ],
+      "answerable_now": [
+        "identificação de estruturas de cargos e funções existentes no catálogo",
+        "análise de dados remuneratórios existentes"
+      ],
+      "missing_data": [
+        "vínculo nominal confiável entre servidor e cada cargo em comissão",
+        "vínculo nominal confiável entre servidor e cada função de confiança",
+        "detalhamento financeiro por rubrica"
+      ],
+      "required_for_full_answer": [
+        "relação nominal servidor -> cargo em comissão",
+        "relação nominal servidor -> função de confiança",
+        "relação servidor -> mês -> rubrica -> valor"
+      ],
+      "notes": "O Ágora não deve inferir acumulação individual a partir de quantitativos agregados por unidade."
+    },
+    {
+      "id": "BRUNO_03",
+      "title": "Ranking de unidades por concentração remuneratória",
+      "question": "Gere uma TABELA com as 10 unidades do TJRR com maior índice de Gini de rendimento líquido no primeiro semestre de 2025, incluindo nome da unidade, chefia imediata, Gini calculado e percentual da folha em verbas indenizatórias.",
+      "expected_status": "PARTIAL",
+      "requested_output_format": "table",
+      "capabilities": [
+        "CTE",
+        "window_function",
+        "ranking",
+        "gini",
+        "resultado_tabular",
+        "resultado_com_nomes",
+        "resultado_com_unidades"
+      ],
+      "answerable_now": [
+        "cálculo de concentração remuneratória, se houver relacionamento seguro entre remuneração e unidade",
+        "ranking de unidades",
+        "formatação de saída em tabela"
+      ],
+      "missing_data": [
+        "identificação institucional de chefia imediata",
+        "detalhamento de verbas indenizatórias por servidor, unidade e mês"
+      ],
+      "semantic_risks": [
+        "servidor de maior remuneração não pode ser presumido como chefia imediata"
+      ],
+      "required_for_full_answer": [
+        "atributo ou relação institucional que identifique chefia",
+        "classificação financeira vinculada aos pagamentos individuais"
+      ],
+      "notes": "Se não houver dado de chefia, o sistema deve explicar que consegue identificar a maior remuneração da unidade, mas não afirmar que essa pessoa seja a chefia."
+    },
+    {
+      "id": "BRUNO_04",
+      "title": "Teto constitucional - narrativa de auditoria",
+      "question": "Produza um TEXTO CORRIDO em formato de relatório de auditoria identificando servidores do TJRR que ultrapassaram o teto constitucional informado para 2025 no primeiro semestre, citando nome, cargo efetivo, lotação, valor excedente e rubricas responsáveis.",
+      "expected_status": "PARTIAL",
+      "requested_output_format": "narrative",
+      "capabilities": [
+        "CTE",
+        "filter_threshold",
+        "resultado_narrativo",
+        "resultado_com_nomes",
+        "resultado_com_unidades",
+        "resultado_com_cargos"
+      ],
+      "answerable_now": [
+        "comparação matemática de valores remuneratórios com um limite explicitamente fornecido pelo usuário",
+        "identificação de registros acima do limite",
+        "produção de texto corrido com base nos dados efetivamente disponíveis"
+      ],
+      "missing_data": [
+        "rubricas responsáveis pelo valor individual recebido",
+        "eventuais classificações jurídicas necessárias à análise do teto"
+      ],
+      "semantic_risks": [
+        "não concluir automaticamente que valor acima de um limite representa ilegalidade",
+        "não recomendar devolução ao erário sem base jurídica e dados suficientes",
+        "não presumir que rendimento líquido seja a base jurídica correta para incidência do teto"
+      ],
+      "required_for_full_answer": [
+        "regra jurídica explicitamente fornecida ou modelada no perfil semântico",
+        "detalhamento de rubricas por servidor e mês"
+      ],
+      "notes": "O benchmark deve diferenciar análise matemática de conclusão jurídica."
+    },
+    {
+      "id": "BRUNO_05",
+      "title": "Crescimento remuneratório no percentil 75",
+      "question": "Liste os 15 servidores do TJRR com maior crescimento percentual de rendimento líquido entre janeiro e junho de 2025, apenas para aqueles que estavam no percentil 75 ou acima em janeiro, mostrando cargo, lotação e rubricas que explicam a variação.",
+      "expected_status": "PARTIAL",
+      "requested_output_format": "table",
+      "capabilities": [
+        "multiple_ctes",
+        "percentile",
+        "ranking",
+        "temporal_comparison",
+        "percentage_change",
+        "resultado_com_nomes",
+        "resultado_com_unidades",
+        "resultado_tabular"
+      ],
+      "answerable_now": [
+        "comparação janeiro versus junho",
+        "crescimento percentual",
+        "cálculo de percentil",
+        "ranking dos maiores crescimentos",
+        "nome de pessoas quando o relacionamento estiver disponível",
+        "cargo e lotação quando existentes e relacionáveis"
+      ],
+      "missing_data": [
+        "decomposição da variação por rubrica"
+      ],
+      "required_for_full_answer": [
+        "relação servidor -> mês -> rubrica -> valor"
+      ],
+      "notes": "A explicação causal da variação por rubrica não pode ser fabricada a partir do valor líquido agregado."
+    }
+  ]
+}

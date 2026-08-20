@@ -1,0 +1,314 @@
+{
+  "benchmark": {
+    "id": "bruno_fire_test",
+    "name": "Teste de Fogo - Prof. Bruno Cesar",
+    "version": "1.0",
+    "description": "Benchmark de perguntas complexas para avaliar interpretação semântica, capacidade analítica, geração de SQL complexo, reconhecimento de limitações dos dados e governança do Ágora.",
+    "expected_statuses": [
+      "ANSWER",
+      "PARTIAL",
+      "NEEDS_CLARIFICATION",
+      "NOT_ANSWERABLE"
+    ]
+  },
+  "executed_at": "2026-08-15T13:23:00.553557",
+  "api_url": "http://localhost:8000/ask",
+  "summary": {
+    "total_cases": 5,
+    "compatible_cases": 5,
+    "review_cases": 0,
+    "total_tokens": 40986,
+    "estimated_total_cost_usd": 0.0090512
+  },
+  "results": [
+    {
+      "case_id": "BRUNO_01",
+      "title": "Anomalia remuneratória por unidade",
+      "question": "Liste servidores cujo rendimento líquido em junho de 2025 supera em mais de 2 desvios-padrão a média de sua unidade de lotação, mostrando também a decomposição por rubrica.",
+      "expected_status": "PARTIAL",
+      "actual_status": "NOT_ANSWERABLE",
+      "compatible": true,
+      "answer": "Os dados disponíveis permitem identificar remunerações líquidas por servidor e lotação, mas não contêm valores de remuneração decompostos por rubrica nem relacionamento entre essas rubricas e os registros de remuneração.",
+      "generated_sql": null,
+      "columns": null,
+      "rows": null,
+      "row_count": null,
+      "execution_time_ms": null,
+      "usage": {
+        "model": "gpt-5.6-luna",
+        "input_tokens": 8019,
+        "cached_input_tokens": 0,
+        "output_tokens": 178,
+        "reasoning_tokens": 106,
+        "total_tokens": 8197,
+        "steps": {
+          "sql_generation": {
+            "model": "gpt-5.6-luna",
+            "input_tokens": 8019,
+            "cached_input_tokens": 0,
+            "output_tokens": 178,
+            "reasoning_tokens": 106,
+            "total_tokens": 8197
+          },
+          "final_answer": {
+            "model": null,
+            "input_tokens": 0,
+            "cached_input_tokens": 0,
+            "output_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "cost": {
+          "currency": "USD",
+          "input_cost_usd": 0.0016038,
+          "cached_input_cost_usd": 0.0,
+          "output_cost_usd": 0.0002136,
+          "total_cost_usd": 0.0018174
+        }
+      },
+      "known_missing_data": [
+        "detalhamento da remuneração por rubrica, servidor e mês"
+      ],
+      "semantic_risks": [],
+      "required_for_full_answer": [
+        "uma relação equivalente a servidor -> mês -> rubrica -> valor"
+      ],
+      "notes": "O Ágora não deve inventar decomposição por rubrica apenas porque existe um catálogo de rubricas."
+    },
+    {
+      "case_id": "BRUNO_02",
+      "title": "Cargo em comissão e função de confiança",
+      "question": "Identifique servidores que ocupam simultaneamente Cargo em Comissão e Função de Confiança no mesmo mês, quantificando o impacto financeiro total da acumulação.",
+      "expected_status": "PARTIAL",
+      "actual_status": "NOT_ANSWERABLE",
+      "compatible": true,
+      "answer": "Os dados disponíveis não permitem identificar, no mesmo mês, os servidores que acumulam cargo em comissão e função de confiança nem quantificar o impacto financeiro dessa acumulação, pois não há relacionamento entre os registros funcionais e remuneratórios por servidor e período.",
+      "generated_sql": null,
+      "columns": null,
+      "rows": null,
+      "row_count": null,
+      "execution_time_ms": null,
+      "usage": {
+        "model": "gpt-5.6-luna",
+        "input_tokens": 8010,
+        "cached_input_tokens": 0,
+        "output_tokens": 144,
+        "reasoning_tokens": 65,
+        "total_tokens": 8154,
+        "steps": {
+          "sql_generation": {
+            "model": "gpt-5.6-luna",
+            "input_tokens": 8010,
+            "cached_input_tokens": 0,
+            "output_tokens": 144,
+            "reasoning_tokens": 65,
+            "total_tokens": 8154
+          },
+          "final_answer": {
+            "model": null,
+            "input_tokens": 0,
+            "cached_input_tokens": 0,
+            "output_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "cost": {
+          "currency": "USD",
+          "input_cost_usd": 0.001602,
+          "cached_input_cost_usd": 0.0,
+          "output_cost_usd": 0.0001728,
+          "total_cost_usd": 0.0017748
+        }
+      },
+      "known_missing_data": [
+        "vínculo nominal confiável entre servidor e cada cargo em comissão",
+        "vínculo nominal confiável entre servidor e cada função de confiança",
+        "detalhamento financeiro por rubrica"
+      ],
+      "semantic_risks": [],
+      "required_for_full_answer": [
+        "relação nominal servidor -> cargo em comissão",
+        "relação nominal servidor -> função de confiança",
+        "relação servidor -> mês -> rubrica -> valor"
+      ],
+      "notes": "O Ágora não deve inferir acumulação individual a partir de quantitativos agregados por unidade."
+    },
+    {
+      "case_id": "BRUNO_03",
+      "title": "Ranking de unidades por concentração remuneratória",
+      "question": "Gere uma TABELA com as 10 unidades do TJRR com maior índice de Gini de rendimento líquido no primeiro semestre de 2025, incluindo nome da unidade, chefia imediata, Gini calculado e percentual da folha em verbas indenizatórias.",
+      "expected_status": "PARTIAL",
+      "actual_status": "NOT_ANSWERABLE",
+      "compatible": true,
+      "answer": "Os dados disponíveis não permitem responder essa pergunta: não há relacionamento entre remunerações e unidades, nem informação sobre chefia imediata. Também não existe uma coluna que identifique diretamente a unidade da remuneração para calcular o índice de Gini e o percentual da folha em verbas indenizatórias por unidade.",
+      "generated_sql": null,
+      "columns": null,
+      "rows": null,
+      "row_count": null,
+      "execution_time_ms": null,
+      "usage": {
+        "model": "gpt-5.6-luna",
+        "input_tokens": 8035,
+        "cached_input_tokens": 0,
+        "output_tokens": 177,
+        "reasoning_tokens": 86,
+        "total_tokens": 8212,
+        "steps": {
+          "sql_generation": {
+            "model": "gpt-5.6-luna",
+            "input_tokens": 8035,
+            "cached_input_tokens": 0,
+            "output_tokens": 177,
+            "reasoning_tokens": 86,
+            "total_tokens": 8212
+          },
+          "final_answer": {
+            "model": null,
+            "input_tokens": 0,
+            "cached_input_tokens": 0,
+            "output_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "cost": {
+          "currency": "USD",
+          "input_cost_usd": 0.001607,
+          "cached_input_cost_usd": 0.0,
+          "output_cost_usd": 0.0002124,
+          "total_cost_usd": 0.0018194
+        }
+      },
+      "known_missing_data": [
+        "identificação institucional de chefia imediata",
+        "detalhamento de verbas indenizatórias por servidor, unidade e mês"
+      ],
+      "semantic_risks": [
+        "servidor de maior remuneração não pode ser presumido como chefia imediata"
+      ],
+      "required_for_full_answer": [
+        "atributo ou relação institucional que identifique chefia",
+        "classificação financeira vinculada aos pagamentos individuais"
+      ],
+      "notes": "Se não houver dado de chefia, o sistema deve explicar que consegue identificar a maior remuneração da unidade, mas não afirmar que essa pessoa seja a chefia."
+    },
+    {
+      "case_id": "BRUNO_04",
+      "title": "Teto constitucional - narrativa de auditoria",
+      "question": "Produza um TEXTO CORRIDO em formato de relatório de auditoria identificando servidores do TJRR que ultrapassaram o teto constitucional informado para 2025 no primeiro semestre, citando nome, cargo efetivo, lotação, valor excedente e rubricas responsáveis.",
+      "expected_status": "PARTIAL",
+      "actual_status": "NOT_ANSWERABLE",
+      "compatible": true,
+      "answer": "Os dados disponíveis não permitem identificar os servidores que ultrapassaram o teto constitucional em 2025 nem atribuir os valores excedentes às rubricas responsáveis, pois o catálogo não informa o valor do teto e não há relacionamento entre os registros de remuneração e as rubricas da folha.",
+      "generated_sql": null,
+      "columns": null,
+      "rows": null,
+      "row_count": null,
+      "execution_time_ms": null,
+      "usage": {
+        "model": "gpt-5.6-luna",
+        "input_tokens": 8035,
+        "cached_input_tokens": 0,
+        "output_tokens": 176,
+        "reasoning_tokens": 90,
+        "total_tokens": 8211,
+        "steps": {
+          "sql_generation": {
+            "model": "gpt-5.6-luna",
+            "input_tokens": 8035,
+            "cached_input_tokens": 0,
+            "output_tokens": 176,
+            "reasoning_tokens": 90,
+            "total_tokens": 8211
+          },
+          "final_answer": {
+            "model": null,
+            "input_tokens": 0,
+            "cached_input_tokens": 0,
+            "output_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "cost": {
+          "currency": "USD",
+          "input_cost_usd": 0.001607,
+          "cached_input_cost_usd": 0.0,
+          "output_cost_usd": 0.0002112,
+          "total_cost_usd": 0.0018182
+        }
+      },
+      "known_missing_data": [
+        "rubricas responsáveis pelo valor individual recebido",
+        "eventuais classificações jurídicas necessárias à análise do teto"
+      ],
+      "semantic_risks": [
+        "não concluir automaticamente que valor acima de um limite representa ilegalidade",
+        "não recomendar devolução ao erário sem base jurídica e dados suficientes",
+        "não presumir que rendimento líquido seja a base jurídica correta para incidência do teto"
+      ],
+      "required_for_full_answer": [
+        "regra jurídica explicitamente fornecida ou modelada no perfil semântico",
+        "detalhamento de rubricas por servidor e mês"
+      ],
+      "notes": "O benchmark deve diferenciar análise matemática de conclusão jurídica."
+    },
+    {
+      "case_id": "BRUNO_05",
+      "title": "Crescimento remuneratório no percentil 75",
+      "question": "Liste os 15 servidores do TJRR com maior crescimento percentual de rendimento líquido entre janeiro e junho de 2025, apenas para aqueles que estavam no percentil 75 ou acima em janeiro, mostrando cargo, lotação e rubricas que explicam a variação.",
+      "expected_status": "PARTIAL",
+      "actual_status": "NOT_ANSWERABLE",
+      "compatible": true,
+      "answer": "Os dados disponíveis permitem comparar o rendimento líquido, o cargo e a lotação entre janeiro e junho de 2025, mas não possuem rubricas remuneratórias vinculadas a cada servidor e período para explicar a variação solicitada.",
+      "generated_sql": null,
+      "columns": null,
+      "rows": null,
+      "row_count": null,
+      "execution_time_ms": null,
+      "usage": {
+        "model": "gpt-5.6-luna",
+        "input_tokens": 8033,
+        "cached_input_tokens": 0,
+        "output_tokens": 179,
+        "reasoning_tokens": 104,
+        "total_tokens": 8212,
+        "steps": {
+          "sql_generation": {
+            "model": "gpt-5.6-luna",
+            "input_tokens": 8033,
+            "cached_input_tokens": 0,
+            "output_tokens": 179,
+            "reasoning_tokens": 104,
+            "total_tokens": 8212
+          },
+          "final_answer": {
+            "model": null,
+            "input_tokens": 0,
+            "cached_input_tokens": 0,
+            "output_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "cost": {
+          "currency": "USD",
+          "input_cost_usd": 0.0016066,
+          "cached_input_cost_usd": 0.0,
+          "output_cost_usd": 0.0002148,
+          "total_cost_usd": 0.0018214
+        }
+      },
+      "known_missing_data": [
+        "decomposição da variação por rubrica"
+      ],
+      "semantic_risks": [],
+      "required_for_full_answer": [
+        "relação servidor -> mês -> rubrica -> valor"
+      ],
+      "notes": "A explicação causal da variação por rubrica não pode ser fabricada a partir do valor líquido agregado."
+    }
+  ]
+}

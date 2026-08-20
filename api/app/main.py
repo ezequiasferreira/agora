@@ -1,9 +1,12 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import psycopg2
 from fastapi import FastAPI, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app import db
 from app.ask_service import processar_pergunta
@@ -20,6 +23,18 @@ from app.schemas import (
 )
 
 
+# ============================================================
+# CAMINHOS DA APLICAÇÃO
+# ============================================================
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+FRONTEND_DIR = PROJECT_ROOT / "frontend"
+
+
+# ============================================================
+# CICLO DE VIDA
+# ============================================================
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.configurar_pool()
@@ -27,19 +42,23 @@ async def lifespan(app: FastAPI):
     db.fechar_pool()
 
 
+# ============================================================
+# APLICAÇÃO FASTAPI
+# ============================================================
+
 app = FastAPI(
     title="Ágora API",
     description=(
         "API segura de consultas e perguntas "
         "em linguagem natural sobre os dados do Ágora."
     ),
-    version="0.2.0",
+    version="0.3.0",
     lifespan=lifespan,
 )
 
 
 # ============================================================
-# CORS — INTERFACE WEB DO MVP
+# CORS
 # ============================================================
 
 app.add_middleware(
@@ -47,6 +66,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5500",
         "http://127.0.0.1:5500",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -139,10 +160,12 @@ def executar_query(
             status_code=(
                 status.HTTP_400_BAD_REQUEST
             ),
-            content=ErrorResponse(
-                error_type=erro.error_type,
-                message=erro.message,
-            ).model_dump(),
+            content=jsonable_encoder(
+                ErrorResponse(
+                    error_type=erro.error_type,
+                    message=erro.message,
+                )
+            ),
         )
 
     try:
@@ -181,8 +204,8 @@ def executar_query(
 
         return JSONResponse(
             status_code=status_code,
-            content=(
-                resposta_erro.model_dump()
+            content=jsonable_encoder(
+                resposta_erro
             ),
         )
 
@@ -191,10 +214,12 @@ def executar_query(
             status_code=(
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             ),
-            content=ErrorResponse(
-                error_type="INTERNAL_ERROR",
-                message=str(erro),
-            ).model_dump(),
+            content=jsonable_encoder(
+                ErrorResponse(
+                    error_type="INTERNAL_ERROR",
+                    message=str(erro),
+                )
+            ),
         )
 
     return QueryResponse(
@@ -228,51 +253,57 @@ def perguntar(
             status_code=(
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             ),
-            content=AskResponse(
-                success=False,
-                status="INTERNAL_ERROR",
-                answer=(
-                    "Ocorreu um erro interno ao "
-                    "processar a pergunta."
-                ),
-            ).model_dump(),
+            content=jsonable_encoder(
+                AskResponse(
+                    success=False,
+                    status="INTERNAL_ERROR",
+                    answer=(
+                        "Ocorreu um erro interno ao "
+                        "processar a pergunta."
+                    ),
+                )
+            ),
         )
 
     if not resultado.get(
         "success"
     ):
+        resposta = AskResponse(
+            success=False,
+            status=resultado.get(
+                "status",
+                "INTERNAL_ERROR",
+            ),
+            answer=resultado.get(
+                "answer"
+            ),
+            generated_sql=resultado.get(
+                "generated_sql"
+            ),
+            columns=resultado.get(
+                "columns"
+            ),
+            rows=resultado.get(
+                "rows"
+            ),
+            row_count=resultado.get(
+                "row_count"
+            ),
+            execution_time_ms=resultado.get(
+                "execution_time_ms"
+            ),
+            usage=resultado.get(
+                "usage"
+            ),
+        )
+
         return JSONResponse(
             status_code=(
                 status.HTTP_400_BAD_REQUEST
             ),
-            content=AskResponse(
-                success=False,
-                status=resultado.get(
-                    "status",
-                    "INTERNAL_ERROR",
-                ),
-                answer=resultado.get(
-                    "answer"
-                ),
-                generated_sql=resultado.get(
-                    "generated_sql"
-                ),
-                columns=resultado.get(
-                    "columns"
-                ),
-                rows=resultado.get(
-                    "rows"
-                ),
-                row_count=resultado.get(
-                    "row_count"
-                ),
-                execution_time_ms=resultado.get(
-                    "execution_time_ms"
-                ),
-                usage=resultado.get(
-                    "usage"
-                ),
-            ).model_dump(),
+            content=jsonable_encoder(
+                resposta
+            ),
         )
 
     return AskResponse(
@@ -302,4 +333,25 @@ def perguntar(
         usage=resultado.get(
             "usage"
         ),
+    )
+
+
+# ============================================================
+# FRONTEND — SERVIDO PELO MESMO FASTAPI
+# IMPORTANTE: DEVE PERMANECER APÓS AS ROTAS DA API
+# ============================================================
+
+if FRONTEND_DIR.exists():
+    app.mount(
+        "/",
+        StaticFiles(
+            directory=str(FRONTEND_DIR),
+            html=True,
+        ),
+        name="frontend",
+    )
+else:
+    print(
+        f"[ÁGORA] Frontend não encontrado em: "
+        f"{FRONTEND_DIR}"
     )

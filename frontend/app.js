@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = window.location.origin;
 const API_ASK_URL = `${API_BASE_URL}/ask`;
 const API_HEALTH_URL = `${API_BASE_URL}/health`;
 
@@ -13,6 +13,11 @@ const responseCard = document.querySelector(".response-card");
 const loading = document.getElementById("loading");
 const answer = document.getElementById("answer");
 const error = document.getElementById("error");
+
+const chartContainer = document.getElementById("chart-container");
+const chartTitle = document.getElementById("chart-title");
+const chartSummary = document.getElementById("chart-summary");
+const resultChartCanvas = document.getElementById("result-chart");
 
 const technicalDetails = document.getElementById("technical-details");
 const technicalStatus = document.getElementById("technical-status");
@@ -53,6 +58,8 @@ const exampleButtons = document.querySelectorAll(".example");
 
 const systemStatus = document.querySelector(".status");
 const systemStatusDot = document.querySelector(".status-dot");
+
+let graficoAtual = null;
 
 
 function mostrar(elemento) {
@@ -95,6 +102,76 @@ function formatarCusto(valor) {
 }
 
 
+function normalizarTexto(valor) {
+    return String(valor || "")
+        .normalize("NFD")
+        .replace(
+            /[\u0300-\u036f]/g,
+            ""
+        )
+        .toLowerCase()
+        .trim();
+}
+
+
+function converterNumeroTexto(valor) {
+    if (
+        valor === null ||
+        valor === undefined
+    ) {
+        return null;
+    }
+
+    let texto = String(valor)
+        .trim()
+        .replace(/\s/g, "")
+        .replace(/^R\$/i, "")
+        .replace(/^US\$/i, "")
+        .replace(/%$/, "");
+
+    if (!texto) {
+        return null;
+    }
+
+    const possuiVirgula =
+        texto.includes(",");
+
+    const possuiPonto =
+        texto.includes(".");
+
+    if (
+        possuiVirgula &&
+        possuiPonto
+    ) {
+        texto = texto
+            .replace(/\./g, "")
+            .replace(",", ".");
+    } else if (possuiVirgula) {
+        texto = texto.replace(
+            ",",
+            "."
+        );
+    }
+
+    texto = texto.replace(
+        /[^0-9.+-]/g,
+        ""
+    );
+
+    if (!texto) {
+        return null;
+    }
+
+    const numero = Number(texto);
+
+    if (Number.isNaN(numero)) {
+        return null;
+    }
+
+    return numero;
+}
+
+
 function limparEstadoResposta() {
     responseCard.classList.remove(
         "response-state-answer",
@@ -129,7 +206,10 @@ function aplicarEstadoResposta(status) {
         return;
     }
 
-    if (status === "NOT_ANSWERABLE") {
+    if (
+        status ===
+        "NOT_ANSWERABLE"
+    ) {
         responseCard.classList.add(
             "response-state-not-answerable"
         );
@@ -141,7 +221,10 @@ function aplicarEstadoResposta(status) {
         return;
     }
 
-    if (status === "NEEDS_CLARIFICATION") {
+    if (
+        status ===
+        "NEEDS_CLARIFICATION"
+    ) {
         responseCard.classList.add(
             "response-state-clarification"
         );
@@ -159,37 +242,964 @@ function aplicarEstadoResposta(status) {
 }
 
 
+function criarTituloResposta(titulo) {
+    const elemento =
+        document.createElement(
+            "div"
+        );
+
+    elemento.className =
+        "answer-state-title";
+
+    elemento.textContent =
+        titulo;
+
+    return elemento;
+}
+
+
+function criarTextoResposta(texto) {
+    const elemento =
+        document.createElement(
+            "div"
+        );
+
+    elemento.className =
+        "answer-state-message";
+
+    elemento.textContent =
+        texto;
+
+    return elemento;
+}
+
+
 function criarMensagemResposta(
     titulo,
     mensagem
 ) {
     answer.replaceChildren();
 
-    const tituloElemento =
-        document.createElement("div");
-
-    tituloElemento.className =
-        "answer-state-title";
-
-    tituloElemento.textContent =
-        titulo;
-
-    const mensagemElemento =
-        document.createElement("div");
-
-    mensagemElemento.className =
-        "answer-state-message";
-
-    mensagemElemento.textContent =
-        mensagem;
-
     answer.appendChild(
-        tituloElemento
+        criarTituloResposta(
+            titulo
+        )
     );
 
     answer.appendChild(
-        mensagemElemento
+        criarTextoResposta(
+            mensagem
+        )
     );
+}
+
+
+function normalizarCelulasTabela(linha) {
+    let texto = linha.trim();
+
+    if (texto.startsWith("|")) {
+        texto = texto.substring(1);
+    }
+
+    if (texto.endsWith("|")) {
+        texto = texto.substring(
+            0,
+            texto.length - 1
+        );
+    }
+
+    return texto
+        .split("|")
+        .map(
+            (celula) =>
+                celula.trim()
+        );
+}
+
+
+function ehLinhaSeparadoraTabela(linha) {
+    const celulas =
+        normalizarCelulasTabela(
+            linha
+        );
+
+    if (!celulas.length) {
+        return false;
+    }
+
+    return celulas.every(
+        (celula) =>
+            /^:?-{3,}:?$/.test(
+                celula
+            )
+    );
+}
+
+
+function linhaPareceTabela(linha) {
+    const texto =
+        linha.trim();
+
+    if (!texto.includes("|")) {
+        return false;
+    }
+
+    return (
+        normalizarCelulasTabela(
+            texto
+        ).length >= 2
+    );
+}
+
+
+function extrairTabelaMarkdown(texto) {
+    const linhas =
+        String(texto)
+            .replace(/\r\n/g, "\n")
+            .split("\n");
+
+    for (
+        let indice = 0;
+        indice < linhas.length - 1;
+        indice += 1
+    ) {
+        const linhaCabecalho =
+            linhas[indice];
+
+        const linhaSeparadora =
+            linhas[indice + 1];
+
+        if (
+            !linhaPareceTabela(
+                linhaCabecalho
+            )
+        ) {
+            continue;
+        }
+
+        if (
+            !ehLinhaSeparadoraTabela(
+                linhaSeparadora
+            )
+        ) {
+            continue;
+        }
+
+        const cabecalho =
+            normalizarCelulasTabela(
+                linhaCabecalho
+            );
+
+        const linhasDados = [];
+
+        let proximoIndice =
+            indice + 2;
+
+        while (
+            proximoIndice <
+            linhas.length
+        ) {
+            const linhaAtual =
+                linhas[
+                    proximoIndice
+                ];
+
+            if (
+                !linhaPareceTabela(
+                    linhaAtual
+                )
+            ) {
+                break;
+            }
+
+            const celulas =
+                normalizarCelulasTabela(
+                    linhaAtual
+                );
+
+            if (
+                celulas.length !==
+                cabecalho.length
+            ) {
+                break;
+            }
+
+            linhasDados.push(
+                celulas
+            );
+
+            proximoIndice += 1;
+        }
+
+        if (
+            linhasDados.length === 0
+        ) {
+            continue;
+        }
+
+        return {
+            cabecalho,
+            linhas: linhasDados,
+            textoAntes:
+                linhas
+                    .slice(
+                        0,
+                        indice
+                    )
+                    .join("\n")
+                    .trim(),
+            textoDepois:
+                linhas
+                    .slice(
+                        proximoIndice
+                    )
+                    .join("\n")
+                    .trim(),
+        };
+    }
+
+    return null;
+}
+
+
+function valorPareceNumerico(valor) {
+    return (
+        converterNumeroTexto(
+            valor
+        ) !== null
+    );
+}
+
+
+function criarTabelaVisual(
+    cabecalho,
+    linhas
+) {
+    const container =
+        document.createElement(
+            "div"
+        );
+
+    container.className =
+        "agora-table-container";
+
+    const table =
+        document.createElement(
+            "table"
+        );
+
+    table.className =
+        "agora-table";
+
+    const thead =
+        document.createElement(
+            "thead"
+        );
+
+    const linhaCabecalho =
+        document.createElement(
+            "tr"
+        );
+
+    cabecalho.forEach(
+        (titulo, indice) => {
+            const th =
+                document.createElement(
+                    "th"
+                );
+
+            th.textContent =
+                titulo;
+
+            const colunaNumerica =
+                linhas.length > 0 &&
+                linhas.every(
+                    (linha) =>
+                        valorPareceNumerico(
+                            linha[
+                                indice
+                            ]
+                        )
+                );
+
+            if (colunaNumerica) {
+                th.classList.add(
+                    "agora-cell-number"
+                );
+            }
+
+            linhaCabecalho.appendChild(
+                th
+            );
+        }
+    );
+
+    thead.appendChild(
+        linhaCabecalho
+    );
+
+    table.appendChild(
+        thead
+    );
+
+    const tbody =
+        document.createElement(
+            "tbody"
+        );
+
+    linhas.forEach(
+        (linha) => {
+            const tr =
+                document.createElement(
+                    "tr"
+                );
+
+            linha.forEach(
+                (valor, indice) => {
+                    const td =
+                        document.createElement(
+                            "td"
+                        );
+
+                    td.textContent =
+                        valor;
+
+                    const colunaNumerica =
+                        linhas.every(
+                            (linhaTeste) =>
+                                valorPareceNumerico(
+                                    linhaTeste[
+                                        indice
+                                    ]
+                                )
+                        );
+
+                    if (
+                        colunaNumerica
+                    ) {
+                        td.classList.add(
+                            "agora-cell-number"
+                        );
+                    }
+
+                    tr.appendChild(
+                        td
+                    );
+                }
+            );
+
+            tbody.appendChild(
+                tr
+            );
+        }
+    );
+
+    table.appendChild(
+        tbody
+    );
+
+    container.appendChild(
+        table
+    );
+
+    return container;
+}
+
+
+function criarResumoTabela(
+    quantidadeLinhas
+) {
+    const resumo =
+        document.createElement(
+            "div"
+        );
+
+    resumo.className =
+        "agora-table-summary";
+
+    resumo.textContent =
+        quantidadeLinhas === 1
+            ? "1 registro"
+            : `${quantidadeLinhas} registros`;
+
+    return resumo;
+}
+
+
+function exibirRespostaComTabela(
+    titulo,
+    tabela
+) {
+    answer.replaceChildren();
+
+    answer.appendChild(
+        criarTituloResposta(
+            titulo
+        )
+    );
+
+    if (tabela.textoAntes) {
+        answer.appendChild(
+            criarTextoResposta(
+                tabela.textoAntes
+            )
+        );
+    }
+
+    const blocoTabela =
+        document.createElement(
+            "div"
+        );
+
+    blocoTabela.className =
+        "agora-table-block";
+
+    blocoTabela.appendChild(
+        criarResumoTabela(
+            tabela.linhas.length
+        )
+    );
+
+    blocoTabela.appendChild(
+        criarTabelaVisual(
+            tabela.cabecalho,
+            tabela.linhas
+        )
+    );
+
+    answer.appendChild(
+        blocoTabela
+    );
+
+    if (tabela.textoDepois) {
+        answer.appendChild(
+            criarTextoResposta(
+                tabela.textoDepois
+            )
+        );
+    }
+}
+
+
+function exibirConteudoResposta(
+    titulo,
+    mensagem
+) {
+    const tabela =
+        extrairTabelaMarkdown(
+            mensagem
+        );
+
+    if (tabela) {
+        exibirRespostaComTabela(
+            titulo,
+            tabela
+        );
+
+        return tabela;
+    }
+
+    criarMensagemResposta(
+        titulo,
+        mensagem
+    );
+
+    return null;
+}
+
+
+function limparGrafico() {
+    if (graficoAtual) {
+        graficoAtual.destroy();
+        graficoAtual = null;
+    }
+
+    chartTitle.textContent =
+        "Evolução";
+
+    chartSummary.textContent =
+        "";
+
+    esconder(
+        chartContainer
+    );
+}
+
+
+function colunaEhTemporal(
+    titulo
+) {
+    const texto =
+        normalizarTexto(
+            titulo
+        );
+
+    const termos = [
+        "mes",
+        "referencia",
+        "competencia",
+        "periodo",
+        "data",
+        "ano mes",
+        "ano/mes",
+    ];
+
+    return termos.some(
+        (termo) =>
+            texto.includes(
+                termo
+            )
+    );
+}
+
+
+function obterIndiceColunaTemporal(
+    tabela
+) {
+    return tabela.cabecalho.findIndex(
+        (titulo) =>
+            colunaEhTemporal(
+                titulo
+            )
+    );
+}
+
+
+function obterIndicesColunasNumericas(
+    tabela,
+    indiceTemporal
+) {
+    const indices = [];
+
+    tabela.cabecalho.forEach(
+        (titulo, indice) => {
+            if (
+                indice ===
+                indiceTemporal
+            ) {
+                return;
+            }
+
+            const valores =
+                tabela.linhas.map(
+                    (linha) =>
+                        converterNumeroTexto(
+                            linha[
+                                indice
+                            ]
+                        )
+                );
+
+            const validos =
+                valores.filter(
+                    (valor) =>
+                        valor !== null
+                );
+
+            if (
+                validos.length ===
+                tabela.linhas.length
+            ) {
+                indices.push(
+                    indice
+                );
+            }
+        }
+    );
+
+    return indices;
+}
+
+
+function tituloPareceMonetario(
+    titulo
+) {
+    const texto =
+        normalizarTexto(
+            titulo
+        );
+
+    const termos = [
+        "remuneracao",
+        "rendimento",
+        "credito",
+        "debito",
+        "indenizacao",
+        "vantagem",
+        "gratificacao",
+        "subsidio",
+        "valor",
+        "liquido",
+        "salario",
+    ];
+
+    return termos.some(
+        (termo) =>
+            texto.includes(
+                termo
+            )
+    );
+}
+
+
+function tituloParecePercentual(
+    titulo
+) {
+    const texto =
+        normalizarTexto(
+            titulo
+        );
+
+    return (
+        texto.includes("%") ||
+        texto.includes(
+            "percent"
+        )
+    );
+}
+
+
+function formatarValorGrafico(
+    valor,
+    tituloSerie
+) {
+    if (
+        valor === null ||
+        valor === undefined
+    ) {
+        return "—";
+    }
+
+    if (
+        tituloParecePercentual(
+            tituloSerie
+        )
+    ) {
+        return (
+            Number(valor)
+                .toLocaleString(
+                    "pt-BR",
+                    {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                    }
+                )
+            + "%"
+        );
+    }
+
+    if (
+        tituloPareceMonetario(
+            tituloSerie
+        )
+    ) {
+        return Number(valor)
+            .toLocaleString(
+                "pt-BR",
+                {
+                    style: "currency",
+                    currency: "BRL",
+                }
+            );
+    }
+
+    return Number(valor)
+        .toLocaleString(
+            "pt-BR",
+            {
+                maximumFractionDigits: 2,
+            }
+        );
+}
+
+
+function criarDatasetsGrafico(
+    tabela,
+    indicesNumericos
+) {
+    const cores = [
+        {
+            borda: "#203a63",
+            fundo: "rgba(32, 58, 99, 0.12)",
+        },
+        {
+            borda: "#2f855a",
+            fundo: "rgba(47, 133, 90, 0.10)",
+        },
+        {
+            borda: "#b7791f",
+            fundo: "rgba(183, 121, 31, 0.10)",
+        },
+    ];
+
+    return indicesNumericos
+        .slice(
+            0,
+            3
+        )
+        .map(
+            (indice, posicao) => {
+                const titulo =
+                    tabela.cabecalho[
+                        indice
+                    ];
+
+                const cor =
+                    cores[
+                        posicao %
+                        cores.length
+                    ];
+
+                return {
+                    label: titulo,
+                    data:
+                        tabela.linhas.map(
+                            (linha) =>
+                                converterNumeroTexto(
+                                    linha[
+                                        indice
+                                    ]
+                                )
+                        ),
+                    borderColor:
+                        cor.borda,
+                    backgroundColor:
+                        cor.fundo,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBorderWidth: 2,
+                    tension: 0.32,
+                    fill:
+                        indicesNumericos.length === 1,
+                };
+            }
+        );
+}
+
+
+function exibirGraficoTemporal(
+    tabela
+) {
+    if (
+        typeof Chart ===
+        "undefined"
+    ) {
+        console.warn(
+            "Chart.js não está disponível."
+        );
+
+        return false;
+    }
+
+    const indiceTemporal =
+        obterIndiceColunaTemporal(
+            tabela
+        );
+
+    if (
+        indiceTemporal < 0
+    ) {
+        return false;
+    }
+
+    const indicesNumericos =
+        obterIndicesColunasNumericas(
+            tabela,
+            indiceTemporal
+        );
+
+    if (
+        indicesNumericos.length ===
+        0
+    ) {
+        return false;
+    }
+
+    limparGrafico();
+
+    const labels =
+        tabela.linhas.map(
+            (linha) =>
+                linha[
+                    indiceTemporal
+                ]
+        );
+
+    const datasets =
+        criarDatasetsGrafico(
+            tabela,
+            indicesNumericos
+        );
+
+    if (!datasets.length) {
+        return false;
+    }
+
+    const primeiraSerie =
+        datasets[0].label;
+
+    chartTitle.textContent =
+        datasets.length === 1
+            ? `Evolução — ${primeiraSerie}`
+            : "Evolução dos indicadores";
+
+    chartSummary.textContent =
+        `${labels.length} períodos`;
+
+    const contexto =
+        resultChartCanvas.getContext(
+            "2d"
+        );
+
+    graficoAtual =
+        new Chart(
+            contexto,
+            {
+                type: "line",
+
+                data: {
+                    labels,
+                    datasets,
+                },
+
+                options: {
+                    responsive: true,
+
+                    maintainAspectRatio:
+                        false,
+
+                    interaction: {
+                        mode: "index",
+                        intersect: false,
+                    },
+
+                    plugins: {
+                        legend: {
+                            display:
+                                datasets.length >
+                                1,
+                            position:
+                                "top",
+                            align:
+                                "end",
+                            labels: {
+                                usePointStyle:
+                                    true,
+                                boxWidth: 8,
+                                boxHeight: 8,
+                                padding: 18,
+                            },
+                        },
+
+                        tooltip: {
+                            callbacks: {
+                                label:
+                                    (
+                                        contextoTooltip
+                                    ) => {
+                                        const titulo =
+                                            contextoTooltip
+                                                .dataset
+                                                .label;
+
+                                        const valor =
+                                            contextoTooltip
+                                                .parsed
+                                                .y;
+
+                                        return (
+                                            `${titulo}: ` +
+                                            formatarValorGrafico(
+                                                valor,
+                                                titulo
+                                            )
+                                        );
+                                    },
+                            },
+                        },
+                    },
+
+                    scales: {
+                        x: {
+                            grid: {
+                                display:
+                                    false,
+                            },
+
+                            ticks: {
+                                color:
+                                    "#667085",
+                            },
+                        },
+
+                        y: {
+                            beginAtZero:
+                                false,
+
+                            border: {
+                                display:
+                                    false,
+                            },
+
+                            grid: {
+                                color:
+                                    "rgba(102, 112, 133, 0.10)",
+                            },
+
+                            ticks: {
+                                color:
+                                    "#667085",
+
+                                callback:
+                                    (
+                                        valor
+                                    ) => {
+                                        const titulo =
+                                            datasets[
+                                                0
+                                            ].label;
+
+                                        if (
+                                            tituloPareceMonetario(
+                                                titulo
+                                            )
+                                        ) {
+                                            return Number(
+                                                valor
+                                            ).toLocaleString(
+                                                "pt-BR",
+                                                {
+                                                    notation:
+                                                        "compact",
+                                                    maximumFractionDigits:
+                                                        1,
+                                                }
+                                            );
+                                        }
+
+                                        return Number(
+                                            valor
+                                        ).toLocaleString(
+                                            "pt-BR",
+                                            {
+                                                maximumFractionDigits:
+                                                    1,
+                                            }
+                                        );
+                                    },
+                            },
+                        },
+                    },
+                },
+            }
+        );
+
+    mostrar(
+        chartContainer
+    );
+
+    return true;
 }
 
 
@@ -217,6 +1227,7 @@ function limparResposta() {
     technicalTime.textContent = "—";
     technicalSql.textContent = "—";
 
+    limparGrafico();
     limparDetalhesDeUso();
     limparEstadoResposta();
 
@@ -233,7 +1244,8 @@ function iniciarCarregamento() {
     mostrar(loading);
 
     submitButton.disabled = true;
-    submitButton.textContent = "Processando...";
+    submitButton.textContent =
+        "Processando...";
 }
 
 
@@ -241,12 +1253,14 @@ function finalizarCarregamento() {
     esconder(loading);
 
     submitButton.disabled = false;
-    submitButton.textContent = "Perguntar";
+    submitButton.textContent =
+        "Perguntar";
 }
 
 
 function preencherUso(resultado) {
-    const usage = resultado.usage;
+    const usage =
+        resultado.usage;
 
     if (!usage) {
         limparDetalhesDeUso();
@@ -286,10 +1300,12 @@ function preencherUso(resultado) {
                 usage.cost.total_cost_usd
             );
     } else {
-        technicalCost.textContent = "—";
+        technicalCost.textContent =
+            "—";
     }
 
-    const steps = usage.steps;
+    const steps =
+        usage.steps;
 
     if (
         !steps ||
@@ -302,7 +1318,8 @@ function preencherUso(resultado) {
             technicalUsageBreakdown
         );
 
-        technicalUsage.textContent = "—";
+        technicalUsage.textContent =
+            "—";
 
         return;
     }
@@ -352,7 +1369,9 @@ function preencherUso(resultado) {
 }
 
 
-function preencherDetalhesTecnicos(resultado) {
+function preencherDetalhesTecnicos(
+    resultado
+) {
     technicalStatus.textContent =
         resultado.status || "—";
 
@@ -363,15 +1382,21 @@ function preencherDetalhesTecnicos(resultado) {
         technicalTime.textContent =
             `${resultado.execution_time_ms} ms`;
     } else {
-        technicalTime.textContent = "—";
+        technicalTime.textContent =
+            "—";
     }
 
     technicalSql.textContent =
-        resultado.generated_sql || "—";
+        resultado.generated_sql ||
+        "—";
 
-    preencherUso(resultado);
+    preencherUso(
+        resultado
+    );
 
-    mostrar(technicalDetails);
+    mostrar(
+        technicalDetails
+    );
 }
 
 
@@ -388,7 +1413,10 @@ function exibirResposta(resultado) {
         resultado.answer ||
         "O Ágora não retornou uma resposta.";
 
-    if (resultado.status === "NOT_ANSWERABLE") {
+    if (
+        resultado.status ===
+        "NOT_ANSWERABLE"
+    ) {
         criarMensagemResposta(
             "Informação não disponível nos dados",
             mensagem
@@ -413,7 +1441,10 @@ function exibirResposta(resultado) {
         return;
     }
 
-    if (resultado.status === "NO_DATA") {
+    if (
+        resultado.status ===
+        "NO_DATA"
+    ) {
         criarMensagemResposta(
             "Nenhum resultado encontrado",
             mensagem
@@ -424,12 +1455,19 @@ function exibirResposta(resultado) {
         return;
     }
 
-    criarMensagemResposta(
-        "Resposta",
-        mensagem
-    );
+    const tabela =
+        exibirConteudoResposta(
+            "Resposta",
+            mensagem
+        );
 
     mostrar(answer);
+
+    if (tabela) {
+        exibirGraficoTemporal(
+            tabela
+        );
+    }
 }
 
 
@@ -437,11 +1475,15 @@ function exibirErro(
     mensagem,
     resultado = null
 ) {
+    limparGrafico();
+
     aplicarEstadoResposta(
-        resultado?.status || "ERROR"
+        resultado?.status ||
+        "ERROR"
     );
 
-    error.textContent = mensagem;
+    error.textContent =
+        mensagem;
 
     mostrar(error);
 }
@@ -472,7 +1514,8 @@ function obterElementoTextoStatus() {
             );
 
         textosSoltos.forEach(
-            (node) => node.remove()
+            (node) =>
+                node.remove()
         );
 
         systemStatus.appendChild(
@@ -504,7 +1547,10 @@ function atualizarStatusSistema(
         "status-dot-checking"
     );
 
-    if (estado === "available") {
+    if (
+        estado ===
+        "available"
+    ) {
         systemStatusDot.classList.add(
             "status-dot-available"
         );
@@ -512,7 +1558,10 @@ function atualizarStatusSistema(
         return;
     }
 
-    if (estado === "degraded") {
+    if (
+        estado ===
+        "degraded"
+    ) {
         systemStatusDot.classList.add(
             "status-dot-degraded"
         );
@@ -520,7 +1569,10 @@ function atualizarStatusSistema(
         return;
     }
 
-    if (estado === "checking") {
+    if (
+        estado ===
+        "checking"
+    ) {
         systemStatusDot.classList.add(
             "status-dot-checking"
         );
@@ -541,13 +1593,14 @@ async function verificarSaude() {
     );
 
     try {
-        const response = await fetch(
-            API_HEALTH_URL,
-            {
-                method: "GET",
-                cache: "no-store",
-            }
-        );
+        const response =
+            await fetch(
+                API_HEALTH_URL,
+                {
+                    method: "GET",
+                    cache: "no-store",
+                }
+            );
 
         let resultado;
 
@@ -565,8 +1618,10 @@ async function verificarSaude() {
 
         if (
             response.ok &&
-            resultado.status === "ok" &&
-            resultado.database === "ok"
+            resultado.status ===
+                "ok" &&
+            resultado.database ===
+                "ok"
         ) {
             atualizarStatusSistema(
                 "available",
@@ -577,8 +1632,10 @@ async function verificarSaude() {
         }
 
         if (
-            resultado.status === "degraded" ||
-            resultado.database === "error"
+            resultado.status ===
+                "degraded" ||
+            resultado.database ===
+                "error"
         ) {
             atualizarStatusSistema(
                 "degraded",
@@ -607,23 +1664,30 @@ async function verificarSaude() {
 }
 
 
-async function enviarPergunta(pergunta) {
+async function enviarPergunta(
+    pergunta
+) {
     iniciarCarregamento();
 
     try {
-        const response = await fetch(
-            API_ASK_URL,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type":
-                        "application/json",
-                },
-                body: JSON.stringify({
-                    question: pergunta,
-                }),
-            }
-        );
+        const response =
+            await fetch(
+                API_ASK_URL,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+                    },
+
+                    body:
+                        JSON.stringify({
+                            question:
+                                pergunta,
+                        }),
+                }
+            );
 
         let resultado;
 
@@ -696,7 +1760,8 @@ questionInput.addEventListener(
     "keydown",
     (event) => {
         if (
-            event.key === "Enter" &&
+            event.key ===
+                "Enter" &&
             !event.shiftKey
         ) {
             event.preventDefault();

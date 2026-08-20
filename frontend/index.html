@@ -2,12 +2,19 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
 
     <title>Ágora</title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="assets/favicon.png"
+    >
 
     <link
         rel="stylesheet"
@@ -19,8 +26,12 @@
     <main class="page">
         <section class="hero">
             <div class="brand">
-                <div class="brand-mark">
-                    A
+                <div class="brand-logo-wrapper">
+                    <img
+                        src="assets/agora-logo.png"
+                        alt="Ágora TJRR"
+                        class="brand-logo"
+                    >
                 </div>
 
                 <div>
@@ -34,6 +45,7 @@
 
             <div class="status">
                 <span class="status-dot"></span>
+
                 <span class="status-text">
                     Verificando sistema...
                 </span>
@@ -72,7 +84,7 @@
                     id="question"
                     name="question"
                     rows="4"
-                    placeholder="Ex.: Quantos servidores pertencem às unidades judiciárias de primeiro e segundo graus?"
+                    placeholder="Ex.: Mostre a evolução da remuneração líquida de janeiro a junho de 2025."
                     required
                 ></textarea>
 
@@ -116,6 +128,36 @@
                     id="answer"
                     class="answer hidden"
                 ></div>
+
+                <div
+                    id="chart-container"
+                    class="chart-container hidden"
+                >
+                    <div class="chart-header">
+                        <div>
+                            <span class="chart-eyebrow">
+                                VISUALIZAÇÃO
+                            </span>
+
+                            <h3 id="chart-title">
+                                Evolução
+                            </h3>
+                        </div>
+
+                        <span
+                            id="chart-summary"
+                            class="chart-summary"
+                        ></span>
+                    </div>
+
+                    <div class="chart-canvas-wrapper">
+                        <canvas
+                            id="result-chart"
+                            aria-label="Gráfico da resposta"
+                            role="img"
+                        ></canvas>
+                    </div>
+                </div>
 
                 <div
                     id="error"
@@ -259,21 +301,25 @@
                 <button
                     type="button"
                     class="example"
-                    data-question="Qual é a formação acadêmica dos servidores?"
+                    data-question="Gere uma TABELA com as 10 maiores remunerações líquidas de junho de 2025, mostrando servidor, cargo, lotação e rendimento líquido."
                 >
-                    Informação não disponível
+                    Ranking em tabela
                 </button>
 
                 <button
                     type="button"
                     class="example"
-                    data-question="Qual foi a maior remuneração?"
+                    data-question="Mostre a evolução do rendimento líquido total de janeiro a junho de 2025."
                 >
-                    Pergunta ambígua
+                    Evolução mensal
                 </button>
             </div>
         </section>
     </main>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
+    ></script>
 
     <script src="app.js"></script>
 </body>

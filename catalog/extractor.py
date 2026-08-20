@@ -87,11 +87,13 @@ def coluna_elegivel_para_dominio(coluna):
 
 def extrair_valores_distintos(
     cursor,
-    tabela,
+    objeto,
     coluna,
 ):
     """
     Obtém valores distintos de uma coluna elegível.
+
+    Funciona tanto para tabelas quanto para views.
 
     A consulta busca no máximo MAX_DISTINCT_VALUES + 1.
     Se houver mais valores do que o limite configurado,
@@ -102,7 +104,7 @@ def extrair_valores_distintos(
     consulta = sql.SQL(
         """
         SELECT DISTINCT {coluna} AS valor
-        FROM {schema}.{tabela}
+        FROM {schema}.{objeto}
         WHERE {coluna} IS NOT NULL
         ORDER BY {coluna}
         LIMIT %s
@@ -110,7 +112,7 @@ def extrair_valores_distintos(
     ).format(
         coluna=sql.Identifier(coluna),
         schema=sql.Identifier(TARGET_SCHEMA),
-        tabela=sql.Identifier(tabela),
+        objeto=sql.Identifier(objeto),
     )
 
     cursor.execute(
@@ -149,23 +151,26 @@ def extrair_valores_distintos(
 
 def enriquecer_catalogo(
     cursor,
-    tabelas_dict,
+    objetos_dict,
 ):
     """
     Acrescenta automaticamente 'distinct_values'
     às colunas elegíveis de baixa cardinalidade que
     passarem pelas regras de segurança.
+
+    O enriquecimento é aplicado tanto a tabelas
+    quanto a views catalogadas.
     """
 
-    for nome_tabela, tabela in tabelas_dict.items():
-        for coluna in tabela["columns"]:
+    for nome_objeto, objeto in objetos_dict.items():
+        for coluna in objeto["columns"]:
 
             if not coluna_elegivel_para_dominio(coluna):
                 continue
 
             valores = extrair_valores_distintos(
                 cursor=cursor,
-                tabela=nome_tabela,
+                objeto=nome_objeto,
                 coluna=coluna["name"],
             )
 
@@ -187,27 +192,45 @@ def extrair_estrutura():
             "tables": [],
         }
 
-        tabelas_dict = {}
+        objetos_dict = {}
 
         # ---------------------------------------------------------
-        # TABELAS
+        # OBJETOS CONSULTÁVEIS
+        #
+        # O catálogo inclui tanto tabelas físicas quanto views.
+        # O núcleo não precisa conhecer previamente os nomes dos
+        # objetos nem possuir regras específicas por domínio.
         # ---------------------------------------------------------
         cursor.execute(
             """
-            SELECT table_name
+            SELECT
+                table_name,
+                table_type
             FROM information_schema.tables
             WHERE table_schema = %s
-              AND table_type = 'BASE TABLE'
-            ORDER BY table_name
+              AND table_type IN (
+                  'BASE TABLE',
+                  'VIEW'
+              )
+            ORDER BY
+                table_type,
+                table_name
             """,
             (TARGET_SCHEMA,),
         )
 
         for row in cursor.fetchall():
             nome = row["table_name"]
+            tipo_banco = row["table_type"]
 
-            tabelas_dict[nome] = {
+            if tipo_banco == "VIEW":
+                tipo_objeto = "view"
+            else:
+                tipo_objeto = "table"
+
+            objetos_dict[nome] = {
                 "name": nome,
+                "object_type": tipo_objeto,
                 "columns": [],
                 "primary_key": [],
                 "foreign_keys": [],
@@ -215,7 +238,8 @@ def extrair_estrutura():
 
         # ---------------------------------------------------------
         # COLUNAS
-        # Mantém a ordem física das colunas da tabela.
+        #
+        # Mantém a ordem física/lógica das colunas do objeto.
         # ---------------------------------------------------------
         cursor.execute(
             """
@@ -227,16 +251,18 @@ def extrair_estrutura():
                 ordinal_position
             FROM information_schema.columns
             WHERE table_schema = %s
-            ORDER BY table_name, ordinal_position
+            ORDER BY
+                table_name,
+                ordinal_position
             """,
             (TARGET_SCHEMA,),
         )
 
         for row in cursor.fetchall():
-            tabela = row["table_name"]
+            objeto = row["table_name"]
 
-            if tabela in tabelas_dict:
-                tabelas_dict[tabela]["columns"].append(
+            if objeto in objetos_dict:
+                objetos_dict[objeto]["columns"].append(
                     {
                         "name": row["column_name"],
                         "type": row["data_type"],
@@ -248,6 +274,9 @@ def extrair_estrutura():
 
         # ---------------------------------------------------------
         # PRIMARY KEYS
+        #
+        # Views normalmente não possuem PK declarada.
+        # Quando não houver, a lista permanece vazia.
         # ---------------------------------------------------------
         cursor.execute(
             """
@@ -269,10 +298,10 @@ def extrair_estrutura():
         )
 
         for row in cursor.fetchall():
-            tabela = row["table_name"]
+            objeto = row["table_name"]
 
-            if tabela in tabelas_dict:
-                tabelas_dict[tabela][
+            if objeto in objetos_dict:
+                objetos_dict[objeto][
                     "primary_key"
                 ].append(
                     row["column_name"]
@@ -280,6 +309,9 @@ def extrair_estrutura():
 
         # ---------------------------------------------------------
         # FOREIGN KEYS
+        #
+        # Views normalmente não possuem FKs declaradas.
+        # Quando não houver, a lista permanece vazia.
         # ---------------------------------------------------------
         cursor.execute(
             """
@@ -307,10 +339,10 @@ def extrair_estrutura():
         )
 
         for row in cursor.fetchall():
-            tabela = row["table_name"]
+            objeto = row["table_name"]
 
-            if tabela in tabelas_dict:
-                tabelas_dict[tabela][
+            if objeto in objetos_dict:
+                objetos_dict[objeto][
                     "foreign_keys"
                 ].append(
                     {
@@ -325,15 +357,28 @@ def extrair_estrutura():
                 )
 
         # ---------------------------------------------------------
-        # ENRIQUECIMENTO SEMÂNTICO
+        # ENRIQUECIMENTO SEMÂNTICO AUTOMÁTICO
         # ---------------------------------------------------------
         enriquecer_catalogo(
             cursor=cursor,
-            tabelas_dict=tabelas_dict,
+            objetos_dict=objetos_dict,
         )
 
+        # ---------------------------------------------------------
+        # COMPATIBILIDADE
+        #
+        # Mantemos a chave "tables" no JSON porque ela já é
+        # consumida pelo restante do Ágora.
+        #
+        # Cada item agora informa também "object_type":
+        # - table
+        # - view
+        #
+        # Dessa forma não quebramos o contrato atual e, ao mesmo
+        # tempo, o catálogo passa a representar views.
+        # ---------------------------------------------------------
         estrutura["tables"] = list(
-            tabelas_dict.values()
+            objetos_dict.values()
         )
 
         return estrutura
@@ -366,7 +411,38 @@ if __name__ == "__main__":
             ensure_ascii=False,
         )
 
+    total_objetos = len(
+        resultado_json.get(
+            "tables",
+            [],
+        )
+    )
+
+    total_tabelas = sum(
+        1
+        for objeto in resultado_json.get(
+            "tables",
+            [],
+        )
+        if objeto.get("object_type") == "table"
+    )
+
+    total_views = sum(
+        1
+        for objeto in resultado_json.get(
+            "tables",
+            [],
+        )
+        if objeto.get("object_type") == "view"
+    )
+
     print(
         f"Sucesso! Estrutura salva em "
         f"{caminho_arquivo}"
+    )
+
+    print(
+        f"Objetos catalogados: {total_objetos} "
+        f"({total_tabelas} tabelas, "
+        f"{total_views} views)"
     )

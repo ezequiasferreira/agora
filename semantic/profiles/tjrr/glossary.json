@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.5",
   "profile": "tjrr",
   "description": "Glossário institucional do perfil TJRR para interpretação semântica no Ágora.",
   "concepts": [
@@ -19,8 +19,48 @@
         {
           "type": "table",
           "table": "remuneracoes"
+        },
+        {
+          "type": "view",
+          "table": "vw_remuneracoes_semanticas",
+          "use_when": "A consulta envolver remuneração associada a lotação canonicalizada, agrupamentos institucionais, estatísticas ou comparações entre períodos."
         }
       ]
+    },
+    {
+      "id": "cargo_efetivo",
+      "business_name": "Cargo efetivo",
+      "description": "Cargo efetivo do servidor conforme a fonte funcional TLP. Deve ser tratado como conceito distinto de cargo remuneratório, cargo em comissão e função de confiança.",
+      "synonyms": [
+        "cargo efetivo",
+        "cargo de origem",
+        "cargo permanente",
+        "cargo do quadro efetivo"
+      ],
+      "targets": [
+        {
+          "type": "column",
+          "table": "servidores_tlp",
+          "column": "cargo_efetivo",
+          "priority": 1,
+          "use_when": "A pergunta solicitar explicitamente cargo efetivo, cargo de origem ou cargo permanente do servidor."
+        }
+      ],
+      "relationship_policy": {
+        "primary_population_rule": "Quando a pergunta tiver população principal definida em outra fonte, como vw_remuneracoes_semanticas, servidores_tlp deve ser utilizada apenas como fonte complementar de cargo efetivo.",
+        "join_type": "LEFT_JOIN",
+        "principle": "Preservar todos os registros da população principal. A ausência de correspondência em servidores_tlp não deve excluir servidores do resultado.",
+        "name_matching": {
+          "type": "normalized_exact",
+          "principle": "Quando não houver identificador comum autorizado, relacionar por nome normalizado exato, ignorando caixa, acentuação e espaços redundantes. Não utilizar correspondência parcial ou fuzzy para enriquecimento cadastral."
+        },
+        "missing_behavior": "Quando não houver correspondência segura, informar que o cargo efetivo não foi identificado na TLP disponível.",
+        "do_not_substitute": "Não substituir silenciosamente cargo_efetivo por cargo da tabela remuneracoes ou da view vw_remuneracoes_semanticas."
+      },
+      "temporal_scope": {
+        "source": "servidores_tlp",
+        "principle": "A TLP representa recortes funcionais específicos. O cargo efetivo obtido dessa fonte deve ser apresentado como informação cadastral do recorte disponível, sem presumir validade histórica para todas as competências."
+      }
     },
     {
       "id": "remuneracao_liquida",
@@ -36,10 +76,24 @@
       "targets": [
         {
           "type": "column",
+          "table": "vw_remuneracoes_semanticas",
+          "column": "rendimento_liquido",
+          "priority": 1,
+          "use_when": "Consultas remuneratórias analíticas, estatísticas, agrupamentos, rankings, comparações temporais ou análises por lotação."
+        },
+        {
+          "type": "column",
           "table": "remuneracoes",
-          "column": "rendimento_liquido"
+          "column": "rendimento_liquido",
+          "priority": 2,
+          "use_when": "Consultas simples em que não seja necessária a camada semântica ou canonicalização institucional."
         }
       ],
+      "analysis_guidance": {
+        "population_source": "vw_remuneracoes_semanticas",
+        "principle": "Médias, desvios-padrão, percentis, rankings, Gini, totais, distribuições e demais estatísticas remuneratórias devem ser calculados sobre a população disponível em vw_remuneracoes_semanticas. A existência ou ausência de detalhamento por rubrica não deve reduzir a população estatística.",
+        "rubric_enrichment": "Quando a pergunta também solicitar explicação ou decomposição por rubrica, primeiro identifique a população ou resultado estatístico em vw_remuneracoes_semanticas e somente depois associe vw_remuneracao_rubrica_semantica para os registros com relacionamento seguro."
+      },
       "display": {
         "type": "currency",
         "currency": "BRL",
@@ -61,13 +115,118 @@
         "message": "Você deseja considerar remuneração líquida ou outro componente remuneratório disponível nos dados?"
       },
       "related_concepts": [
-        "remuneracao_liquida"
+        "remuneracao_liquida",
+        "rubrica_remuneratoria"
       ]
+    },
+    {
+      "id": "rubrica_remuneratoria",
+      "business_name": "Rubrica remuneratória",
+      "description": "Lançamento detalhado da folha de pagamento associado a um servidor e a uma competência, como vencimento, gratificação, indenização, imposto, contribuição, desconto ou outro item publicado pela fonte.",
+      "synonyms": [
+        "rubrica",
+        "rubrica da folha",
+        "item da folha",
+        "componente da remuneração",
+        "componente remuneratório",
+        "detalhamento da folha",
+        "decomposição da remuneração"
+      ],
+      "targets": [
+        {
+          "type": "view",
+          "table": "vw_remuneracao_rubrica_semantica",
+          "priority": 1,
+          "use_when": "A pergunta solicitar decomposição, composição, explicação ou detalhamento da remuneração por rubrica e for necessário relacionar a rubrica à remuneração consolidada."
+        },
+        {
+          "type": "table",
+          "table": "fato_remuneracao_rubrica",
+          "priority": 2,
+          "use_when": "A pergunta tratar diretamente dos lançamentos detalhados da folha e não exigir relacionamento com a remuneração consolidada."
+        },
+        {
+          "type": "table",
+          "table": "rubricas_folha",
+          "priority": 3,
+          "use_when": "A pergunta solicitar denominação, fundamento legal ou informação cadastral do catálogo de rubricas."
+        }
+      ],
+      "relationship_policy": {
+        "semantic_view": "vw_remuneracao_rubrica_semantica",
+        "safe_status": "MATCH_UNICO",
+        "principle": "Para relacionar rubricas detalhadas à remuneração consolidada, utilizar somente relacionamentos explicitamente disponibilizados pela visão semântica. Não criar JOIN por similaridade, aproximação textual ou inferência de nomes durante a geração da consulta.",
+        "unmatched_behavior": "Registros sem relacionamento seguro podem permanecer na fonte detalhada, mas não devem ser usados para atribuir rubricas a uma remuneração consolidada específica.",
+        "statistical_population_rule": "A ausência de MATCH_UNICO na visão de rubricas não deve excluir o servidor da população usada para calcular estatísticas remuneratórias.",
+        "preferred_join_key": "remuneracao_id",
+        "preferred_join_rule": "Quando a população principal já tiver os identificadores da remuneração consolidada, como id, remuneracao_id_jan ou remuneracao_id_jun, relacionar vw_remuneracao_rubrica_semantica por remuneracao_id.",
+        "text_join_prohibition": "Não relacionar rubricas por nome, nome normalizado ou similaridade textual quando remuneracao_id estiver disponível. Relacionamento textual só pode ser considerado na ausência de identificador semântico seguro autorizado.",
+        "temporal_comparison_rule": "Em comparações entre competências, preserve separadamente os IDs de remuneração de cada competência e associe as rubricas de cada mês ao respectivo remuneracao_id antes de calcular diferenças, surgimentos, desaparecimentos ou variações."
+      },
+      "value_semantics": {
+        "signal_warning": "O campo sinal da API não representa de forma confiável, isoladamente, a natureza de crédito ou débito. Há rubricas de desconto publicadas com sinal '+'.",
+        "principle": "Não inferir que sinal='+' significa crédito nem que sinal='-' significa débito sem outra evidência semântica disponível nos dados.",
+        "preferred_classification": "Quando for necessário classificar impacto financeiro, utilizar o grupo_remuneratorio, metadados disponíveis, catálogo institucional ou regra semântica explicitamente validada. Se não houver base suficiente, não inventar a classificação."
+      }
+    },
+    {
+      "id": "teto_constitucional",
+      "business_name": "Teto constitucional",
+      "description": "Limite remuneratório cuja incidência efetivamente observada na folha deve ser identificada prioritariamente pela retenção de teto registrada nos dados, e não reconstruída apenas pela diferença entre total de créditos e um valor-limite.",
+      "synonyms": [
+        "teto remuneratório",
+        "teto constitucional",
+        "excedente ao teto",
+        "retenção do teto",
+        "redutor de teto",
+        "redutor do teto remuneratório",
+        "ultrapassou o teto"
+      ],
+      "targets": [
+        {
+          "type": "column",
+          "table": "vw_remuneracoes_semanticas",
+          "column": "retencao_teto",
+          "priority": 1,
+          "use_when": "A pergunta solicitar identificar servidores que tiveram retenção por teto, quantificar valor excedente observado ou analisar incidência do teto."
+        },
+        {
+          "type": "column",
+          "table": "remuneracoes",
+          "column": "retencao_teto",
+          "priority": 2,
+          "use_when": "A visão semântica não for necessária e a pergunta tratar diretamente da retenção de teto registrada na remuneração."
+        },
+        {
+          "type": "view",
+          "table": "vw_remuneracao_rubrica_semantica",
+          "priority": 3,
+          "use_when": "A pergunta solicitar rubricas que comprovem ou detalhem a retenção do teto."
+        }
+      ],
+      "analysis_guidance": {
+        "event_detection": "Para identificar ocorrências de ultrapassagem efetivamente reconhecidas pela folha, usar retencao_teto > 0 como evidência principal quando essa coluna estiver disponível.",
+        "observed_excess_value": "Quando a pergunta solicitar valor excedente observado ou valor retido por teto, usar retencao_teto. Não substituir por total_creditos - valor_do_teto quando retencao_teto estiver disponível.",
+        "benchmark_limit": "Se o usuário fornecer explicitamente um valor de teto, esse valor pode ser citado como parâmetro da análise ou usado para verificações auxiliares, mas não deve substituir a evidência direta de retencao_teto para quantificar o excedente observado.",
+        "rubric_evidence": "Para detalhar rubricas diretamente responsáveis pelo evento de retenção, usar somente registros com status_relacionamento='MATCH_UNICO' e grupo_remuneratorio='vlretencaotetoconstitucional', quando disponíveis.",
+        "credit_composition_warning": "Rubricas de crédito podem compor a remuneração da competência, mas não devem ser chamadas automaticamente de responsáveis pelo excesso sem regra explícita de incidência."
+      },
+      "relationship_policy": {
+        "semantic_view": "vw_remuneracao_rubrica_semantica",
+        "safe_status": "MATCH_UNICO",
+        "principle": "Usar a visão semântica para relacionar as rubricas de retenção ao registro remuneratório consolidado. Não criar relacionamento alternativo por aproximação."
+      },
+      "display": {
+        "type": "currency",
+        "currency": "BRL",
+        "locale": "pt-BR",
+        "decimal_places": 2
+      }
     },
     {
       "id": "lotacao",
       "business_name": "Lotação",
-      "description": "Unidade organizacional à qual o servidor está associado nos dados funcionais.",
+      "description": "Unidade organizacional à qual o servidor está associado. Quando houver representação canônica revisada, ela deve ser preferida em agrupamentos, rankings, comparações temporais e demais análises institucionais, evitando que variações de grafia ou nomes truncados sejam tratadas como unidades diferentes.",
       "synonyms": [
         "unidade",
         "setor",
@@ -76,10 +235,108 @@
       ],
       "targets": [
         {
+          "type": "column",
+          "table": "vw_remuneracoes_semanticas",
+          "column": "lotacao_canonica",
+          "priority": 1,
+          "use_when": "Análises remuneratórias por lotação, agrupamentos, rankings, indicadores ou comparações entre períodos."
+        },
+        {
+          "type": "column",
+          "table": "vw_remuneracoes_semanticas",
+          "column": "lotacao_original",
+          "priority": 2,
+          "use_when": "A pergunta solicitar explicitamente a nomenclatura original ou histórica registrada na fonte."
+        },
+        {
+          "type": "column",
+          "table": "remuneracoes",
+          "column": "lotacao",
+          "priority": 3,
+          "use_when": "Não houver necessidade de canonicalização ou quando a visão semântica não puder ser utilizada."
+        },
+        {
           "type": "table",
           "table": "unidades_tlp"
         }
-      ]
+      ],
+      "canonicalization": {
+        "preferred": true,
+        "principle": "Utilizar somente correspondências institucionais revisadas e disponíveis nos dados. Não criar equivalências entre unidades por similaridade textual durante a geração da consulta.",
+        "preferred_source": {
+          "table": "vw_remuneracoes_semanticas",
+          "column": "lotacao_canonica"
+        },
+        "original_source": {
+          "table": "vw_remuneracoes_semanticas",
+          "column": "lotacao_original"
+        }
+      }
+    },
+    {
+      "id": "estatistica_remuneratoria",
+      "business_name": "Estatística remuneratória",
+      "description": "Cálculos estatísticos realizados sobre valores remuneratórios, incluindo média, desvio-padrão, percentis, mediana, ranking, distribuição, concentração, índice de Gini, crescimento e identificação de valores atípicos.",
+      "synonyms": [
+        "estatística salarial",
+        "média salarial",
+        "desvio-padrão",
+        "percentil",
+        "outlier",
+        "valor atípico",
+        "índice de Gini",
+        "distribuição salarial"
+      ],
+      "targets": [
+        {
+          "type": "view",
+          "table": "vw_remuneracoes_semanticas",
+          "priority": 1,
+          "use_when": "A consulta calcular qualquer estatística sobre remuneração, principalmente quando envolver lotação, comparação entre servidores ou períodos."
+        }
+      ],
+      "analysis_guidance": {
+        "base_population": "vw_remuneracoes_semanticas",
+        "rule": "Calcular primeiro a estatística sobre a população remuneratória completa disponível para os filtros solicitados.",
+        "enrichment_after_calculation": "Se também forem solicitadas rubricas, identificar primeiro os servidores ou grupos resultantes da análise estatística e depois enriquecer o resultado com vw_remuneracao_rubrica_semantica.",
+        "safe_rubric_relationship": "Ao enriquecer com rubricas relacionadas à remuneração consolidada, considerar somente status_relacionamento='MATCH_UNICO'.",
+        "do_not_do": "Não calcular média, desvio-padrão, percentil, Gini ou outro indicador usando apenas os registros que possuem detalhamento de rubrica, salvo se a pergunta solicitar explicitamente essa população.",
+        "temporal_rubric_comparison": "Quando uma análise comparar o mesmo servidor entre duas competências e também solicitar rubricas explicativas, use os IDs da remuneração consolidada de cada competência para buscar as rubricas correspondentes. Não substitua esse relacionamento por nome normalizado quando os IDs estiverem disponíveis."
+      }
+    },
+    {
+      "id": "desembargador",
+      "business_name": "Desembargador",
+      "description": "Magistrado de segundo grau identificado nos dados remuneratórios pelo valor institucional exato do cargo DESEMBARGADOR.",
+      "synonyms": [
+        "desembargadores",
+        "magistrado desembargador",
+        "magistrados desembargadores"
+      ],
+      "targets": [
+        {
+          "type": "column",
+          "table": "vw_remuneracoes_semanticas",
+          "column": "cargo",
+          "operator": "=",
+          "value": "DESEMBARGADOR",
+          "priority": 1,
+          "use_when": "A pergunta se referir a desembargadores ou magistrados desembargadores."
+        },
+        {
+          "type": "column",
+          "table": "remuneracoes",
+          "column": "cargo",
+          "operator": "=",
+          "value": "DESEMBARGADOR",
+          "priority": 2,
+          "use_when": "A visão semântica não for necessária."
+        }
+      ],
+      "matching_rule": {
+        "type": "exact_domain_value",
+        "principle": "Usar exclusivamente cargo = 'DESEMBARGADOR'. Não utilizar LIKE, ILIKE ou correspondência parcial, pois existem cargos de apoio que contêm a palavra desembargador."
+      }
     },
     {
       "id": "primeiro_grau",

@@ -1,0 +1,19 @@
+Execução do validador de SQL do Ágora (api/app/query_validator.py, função validar_sql)
+Código: repositório ezequiasferreira/agora, commit ca99ed5 (20/08/2026); o arquivo não mudou nos commits posteriores
+Ambiente: execução local isolada, sem banco de dados e sem acesso à aplicação publicada
+Data: 26/11/2026
+Resultado: ACEITO = o validador deixa passar; BLOQUEADO = o validador recusa (tipo do erro)
+
+SELECT simples                       | ACEITO                                     | SELECT COUNT(*) FROM agora.remuneracoes WHERE ano = 2025 AND mes = 1
+CTE de leitura                       | ACEITO                                     | WITH t AS (SELECT mes FROM agora.remuneracoes) SELECT COUNT(*) FROM t
+Palavra proibida dentro de texto     | ACEITO                                     | SELECT 'DROP TABLE x; DELETE' AS texto
+Palavra proibida em comentário       | ACEITO                                     | SELECT 1 -- DROP TABLE agora.remuneracoes
+Ponto e vírgula final                | ACEITO                                     | SELECT 1;
+DELETE                               | BLOQUEADO (SQL_VALIDATION_ERROR)           | DELETE FROM agora.remuneracoes WHERE mes = 1
+UPDATE                               | BLOQUEADO (SQL_VALIDATION_ERROR)           | UPDATE agora.remuneracoes SET ano = 2024
+INSERT                               | BLOQUEADO (SQL_VALIDATION_ERROR)           | INSERT INTO agora.remuneracoes (ano) VALUES (2025)
+DROP                                 | BLOQUEADO (SQL_VALIDATION_ERROR)           | DROP TABLE agora.remuneracoes
+TRUNCATE                             | BLOQUEADO (SQL_VALIDATION_ERROR)           | TRUNCATE agora.remuneracoes
+Duas instruções                      | BLOQUEADO (MULTIPLE_STATEMENTS_ERROR)      | SELECT 1; DELETE FROM agora.remuneracoes
+CTE com DELETE                       | BLOQUEADO (SQL_VALIDATION_ERROR)           | WITH x AS (DELETE FROM agora.remuneracoes RETURNING *) SELECT * FROM x
+SELECT INTO                          | BLOQUEADO (SQL_VALIDATION_ERROR)           | SELECT * INTO nova_tabela FROM agora.remuneracoes
